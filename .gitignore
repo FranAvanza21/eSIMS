@@ -1,0 +1,6 @@
+# Credenciales y configuración local — NUNCA subir al repositorio
+config.js
+
+# Artefactos del sistema operativo
+.DS_Store
+Thumbs.db

@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de eSIMs — AVANZA FIBRA</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <style>
+    :root {
+      --avanza-dark:    #0d1f4e;
+      --avanza-primary: #2456b5;
+      --avanza-light:   #eef4fb;
+    }
+
+    body { font-size: 0.9rem; }
+
+    .navbar-avanza { background-color: var(--avanza-dark) !important; }
+
+    .btn-avanza {
+      background-color: var(--avanza-primary);
+      border-color: var(--avanza-primary);
+      color: #fff;
+    }
+    .btn-avanza:hover, .btn-avanza:focus {
+      background-color: #1a3f8f;
+      border-color: #1a3f8f;
+      color: #fff;
+    }
+    .btn-avanza:disabled {
+      background-color: #6c757d;
+      border-color: #6c757d;
+    }
+
+    .stat-chip {
+      background: #fff;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 0.8rem 1rem;
+    }
+    .stat-chip .stat-num {
+      font-size: 1.6rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .stat-chip .stat-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: #6c757d;
+      margin-top: 3px;
+    }
+
+    .iccid-code {
+      font-size: 0.78rem;
+      letter-spacing: 0.3px;
+      color: #495057;
+      background: #f8f9fa;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .badge-activa      { background-color: #198754; color: #fff; }
+    .badge-pendiente   { background-color: #ffc107; color: #212529; }
+    .badge-suspendida  { background-color: #fd7e14; color: #fff; }
+    .badge-cancelada   { background-color: #dc3545; color: #fff; }
+    .badge-sin-asignar { background-color: #6c757d; color: #fff; }
+    .badge-free        { background-color: #0dcaf0; color: #212529; }
+    .badge-assigned    { background-color: #198754; color: #fff; }
+    .badge-locked      { background-color: #dc3545; color: #fff; }
+
+    .table thead th {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: #6c757d;
+      font-weight: 600;
+      background: #f8f9fa;
+      border-bottom: 2px solid #dee2e6;
+    }
+    .table td { vertical-align: middle; }
+    .table tbody tr:hover { background-color: #f0f5ff; }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: #6c757d;
+    }
+    .empty-state .empty-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: .35;
+    }
+
+    .btn-action { padding: 0.2rem 0.45rem; font-size: 0.8rem; }
+
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, .75);
+      display: grid;
+      place-items: center;
+      z-index: 9999;
+    }
+
+    .field-error { font-size: 0.78rem; color: #dc3545; margin-top: 3px; }
+
+    .modal-header-avanza {
+      background-color: var(--avanza-dark);
+      color: #fff;
+    }
+
+    .fw-500 { font-weight: 500; }
+    .fw-600 { font-weight: 600; }
+
+    .form-section-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      font-weight: 600;
+      color: #6c757d;
+    }
+
+    /* ── Import modal ── */
+    .drop-zone {
+      border: 2px dashed #adb5bd;
+      border-radius: 8px;
+      padding: 2.5rem 1rem;
+      text-align: center;
+      color: #6c757d;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--avanza-primary);
+      background: var(--avanza-light);
+      color: var(--avanza-primary);
+    }
+    .drop-zone .drop-icon { font-size: 2.5rem; opacity: .4; margin-bottom: .5rem; }
+
+    .import-preview { max-height: 260px; overflow-y: auto; }
+    .import-preview .row-ok   td { background-color: #f0fff4; }
+    .import-preview .row-err  td { background-color: #fff5f5; }
+
+    #import-tabs-nav .nav-link {
+      font-size: 0.85rem;
+      color: #495057;
+    }
+    #import-tabs-nav .nav-link.active {
+      color: var(--avanza-primary);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body class="bg-light">
+
+<div class="loading-overlay d-none" id="loading-overlay">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Cargando…</span>
+  </div>
+</div>
+
+<!-- ─── Navbar ─── -->
+<nav class="navbar navbar-dark navbar-avanza py-2 shadow-sm">
+  <div class="container-fluid px-4">
+    <div class="d-flex align-items-center gap-3">
+      <span class="navbar-brand mb-0 fw-bold fs-6">
+        <i class="bi bi-sim-fill me-2"></i>AVANZA FIBRA
+      </span>
+      <span class="text-white-50 d-none d-md-inline">|</span>
+      <span class="text-white-50 d-none d-md-inline" style="font-size:.85rem">Gestión de eSIMs</span>
+    </div>
+    <!-- TODO: mostrar usuario autenticado de la plataforma OyM -->
+    <small class="text-white-50 d-none d-lg-inline" id="usuario-info"></small>
+  </div>
+</nav>
+
+<!-- ─── Chips de estadísticas ─── -->
+<div class="bg-white border-bottom shadow-sm">
+  <div class="container-fluid px-4 py-3">
+    <div class="row g-2">
+      <div class="col-6 col-md-3">
+        <div class="stat-chip">
+          <div class="stat-num text-primary" id="stat-total">—</div>
+          <div class="stat-label">Total eSIMs</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-chip">
+          <div class="stat-num text-info" id="stat-libres">—</div>
+          <div class="stat-label">Libres</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-chip">
+          <div class="stat-num text-success" id="stat-asignadas">—</div>
+          <div class="stat-label">Asignadas</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-chip">
+          <div class="stat-num text-danger" id="stat-bloqueadas">—</div>
+          <div class="stat-label">Bloqueadas</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Barra de herramientas ─── -->
+<div class="container-fluid px-4 py-3">
+  <div class="row g-2 align-items-center">
+    <div class="col-12 col-md-4">
+      <div class="input-group">
+        <span class="input-group-text bg-white border-end-0">
+          <i class="bi bi-search text-muted"></i>
+        </span>
+        <input type="text" class="form-control border-start-0" id="busqueda"
+               placeholder="Buscar por ICCID, cliente o email…" autocomplete="off">
+      </div>
+    </div>
+    <div class="col-6 col-md-2">
+      <select class="form-select" id="filtro-estado">
+        <option value="">Todos los estados</option>
+        <option value="free">Libre</option>
+        <option value="assigned">Asignada</option>
+        <option value="locked">Bloqueada</option>
+      </select>
+    </div>
+
+    <div class="col-12 col-md-auto ms-md-auto d-flex gap-2">
+      <button class="btn btn-outline-secondary" onclick="app.abrirModalImportar()">
+        <i class="bi bi-upload me-1"></i>Importar
+      </button>
+      <button class="btn btn-avanza" onclick="app.abrirModalAlta()">
+        <i class="bi bi-plus-lg me-1"></i>Nueva eSIM
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Tabla ─── -->
+<div class="container-fluid px-4 pb-5">
+
+  <div class="card shadow-sm d-none" id="empty-state">
+    <div class="empty-state">
+      <div class="empty-icon"><i class="bi bi-sim"></i></div>
+      <h5 class="mb-1">No se encontraron eSIMs</h5>
+      <p class="mb-3 small">Prueba a cambiar los filtros o importa un nuevo lote.</p>
+      <button class="btn btn-outline-secondary btn-sm" onclick="app.limpiarFiltros()">
+        <i class="bi bi-x-circle me-1"></i>Limpiar filtros
+      </button>
+    </div>
+  </div>
+
+  <div class="card shadow-sm" id="tabla-container">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>ICCID</th>
+              <th>Cliente</th>
+              <th>Email</th>
+              <th>Estado</th>
+              <th>PIN</th>
+              <th>PUK</th>
+              <th>Fecha uso</th>
+              <th style="width:115px"></th>
+            </tr>
+          </thead>
+          <tbody id="tbody-esims"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card-footer bg-white border-top d-flex align-items-center justify-content-between flex-wrap gap-2"
+         id="paginacion-container">
+      <small class="text-muted" id="paginacion-info"></small>
+      <div id="paginacion-botones"></div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     MODAL: Alta / Edición de eSIM
+     ═══════════════════════════════════════════════ -->
+<div class="modal fade" id="modal-esim" tabindex="-1" aria-labelledby="modal-esim-titulo" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+
+      <div class="modal-header modal-header-avanza">
+        <h5 class="modal-title" id="modal-esim-titulo">
+          <i class="bi bi-sim-fill me-2"></i>Nueva eSIM
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="form-esim" novalidate autocomplete="off">
+          <div class="row g-3">
+
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-500">ICCID <span class="text-danger">*</span></label>
+              <input type="text" class="form-control font-monospace" id="f-iccid"
+                     placeholder="19 dígitos" maxlength="19">
+              <div class="field-error d-none" id="err-iccid"></div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-500">Estado <span class="text-danger">*</span></label>
+              <select class="form-select" id="f-estado">
+                <option value="free">Libre</option>
+                <option value="assigned">Asignada</option>
+                <option value="locked">Bloqueada</option>
+              </select>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-500">Servidor <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="f-servidor"
+                     placeholder="máx. 32 caracteres" maxlength="32">
+              <div class="field-error d-none" id="err-servidor"></div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-500">Clave <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="f-clave"
+                     placeholder="máx. 32 caracteres" maxlength="32">
+              <div class="field-error d-none" id="err-clave"></div>
+            </div>
+
+            <div class="col-6 col-md-3">
+              <label class="form-label fw-500">PIN <span class="text-danger">*</span></label>
+              <input type="text" class="form-control font-monospace" id="f-pin"
+                     placeholder="4 dígitos" maxlength="4">
+              <div class="field-error d-none" id="err-pin"></div>
+            </div>
+
+            <div class="col-6 col-md-3">
+              <label class="form-label fw-500">PUK <span class="text-danger">*</span></label>
+              <input type="text" class="form-control font-monospace" id="f-puk"
+                     placeholder="8 dígitos" maxlength="8">
+              <div class="field-error d-none" id="err-puk"></div>
+            </div>
+
+            <div class="col-12">
+              <hr class="my-0">
+              <p class="form-section-label mt-2 mb-0">Datos del cliente</p>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-500">ID Cliente</label>
+              <input type="number" class="form-control" id="f-id-cliente"
+                     placeholder="Hasta 6 dígitos" min="1" max="999999">
+              <div class="field-error d-none" id="err-id-cliente"></div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-500">Email</label>
+              <input type="email" class="form-control" id="f-email"
+                     placeholder="correo@ejemplo.com">
+              <div class="field-error d-none" id="err-email"></div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-500">Fecha de uso</label>
+              <input type="date" class="form-control" id="f-fecha-usado">
+            </div>
+
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-avanza" id="btn-guardar" onclick="app.guardarEsim()">
+          <i class="bi bi-check-lg me-1"></i>Guardar
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     MODAL: Cambio de estado
+     ═══════════════════════════════════════════════ -->
+<div class="modal fade" id="modal-estado" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title"><i class="bi bi-toggle-on me-2"></i>Cambiar estado</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="small text-muted mb-2">eSIM: <code id="modal-estado-iccid" class="iccid-code"></code></p>
+        <label class="form-label fw-500">Nuevo estado</label>
+        <select class="form-select" id="select-nuevo-estado">
+          <option value="free">Libre</option>
+          <option value="assigned">Asignada</option>
+          <option value="locked">Bloqueada</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-avanza btn-sm" onclick="app.confirmarCambioEstado()">Aplicar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     MODAL: Confirmar eliminación
+     ═══════════════════════════════════════════════ -->
+<div class="modal fade" id="modal-confirmar" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h6 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Confirmar eliminación</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-1">¿Eliminar la eSIM<br><code class="iccid-code" id="modal-confirmar-iccid"></code>?</p>
+        <p class="text-muted small mb-0">Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger btn-sm" onclick="app.confirmarEliminar()">
+          <i class="bi bi-trash me-1"></i>Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     MODAL: Importar eSIMs
+     ═══════════════════════════════════════════════ -->
+<div class="modal fade" id="modal-importar" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+
+      <div class="modal-header modal-header-avanza">
+        <h5 class="modal-title">
+          <i class="bi bi-upload me-2"></i>Importar eSIMs
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body p-0">
+
+        <!-- Tabs nav -->
+        <ul class="nav nav-tabs px-3 pt-3" id="import-tabs-nav" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tab-fichero-btn"
+                    data-bs-toggle="tab" data-bs-target="#tab-fichero"
+                    type="button" role="tab">
+              <i class="bi bi-file-earmark-arrow-up me-1"></i>Subir fichero
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-csv-btn"
+                    data-bs-toggle="tab" data-bs-target="#tab-csv"
+                    type="button" role="tab">
+              <i class="bi bi-clipboard-data me-1"></i>Pegar CSV
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-manual-btn"
+                    data-bs-toggle="tab" data-bs-target="#tab-manual"
+                    type="button" role="tab">
+              <i class="bi bi-keyboard me-1"></i>Manual
+            </button>
+          </li>
+        </ul>
+
+        <!-- Tab content -->
+        <div class="tab-content p-3" id="import-tabs-content">
+
+          <!-- ── Tab: Subir fichero ── -->
+          <div class="tab-pane fade show active" id="tab-fichero" role="tabpanel">
+            <div class="drop-zone" id="drop-zone"
+                 onclick="document.getElementById('file-input').click()">
+              <div class="drop-icon"><i class="bi bi-cloud-upload"></i></div>
+              <p class="mb-1 fw-500">Arrastra tu fichero aquí</p>
+              <p class="small mb-2">o haz clic para seleccionarlo</p>
+              <p class="mb-0" style="font-size:.75rem;color:#adb5bd">
+                Formatos aceptados: CSV, TXT &nbsp;·&nbsp;
+                Columnas: <code>iccid, servidor, clave, pin, puk</code>
+              </p>
+            </div>
+            <input type="file" id="file-input" accept=".csv,.txt" class="d-none">
+            <div id="fichero-nombre" class="small text-muted mt-2 d-none">
+              <i class="bi bi-file-earmark me-1"></i><span></span>
+            </div>
+            <div id="fichero-preview" class="mt-2"></div>
+          </div>
+
+          <!-- ── Tab: Pegar CSV ── -->
+          <div class="tab-pane fade" id="tab-csv" role="tabpanel">
+            <p class="small text-muted mb-2">
+              Pega los datos en formato CSV, una eSIM por línea.<br>
+              Columnas esperadas: <code>iccid,servidor,clave,pin,puk</code>
+              — la primera línea puede ser cabecera o datos directamente.
+              Separador: coma <code>,</code> o punto y coma <code>;</code>.
+            </p>
+            <textarea class="form-control font-monospace" id="csv-textarea" rows="8"
+                      placeholder="iccid,servidor,clave,pin,puk&#10;8934614020000123456,srv01.ejemplo.es,ClaveSecreta123456,1234,12345678"></textarea>
+            <button class="btn btn-sm btn-outline-primary mt-2" onclick="app.analizarCSV()">
+              <i class="bi bi-search me-1"></i>Analizar
+            </button>
+            <div id="csv-preview" class="mt-2"></div>
+          </div>
+
+          <!-- ── Tab: Manual ── -->
+          <div class="tab-pane fade" id="tab-manual" role="tabpanel">
+            <form id="form-import-manual" novalidate autocomplete="off">
+              <div class="row g-2">
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-500">ICCID <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control font-monospace" id="im-iccid"
+                         placeholder="19 dígitos exactos" maxlength="19">
+                  <div class="field-error d-none" id="im-err-iccid"></div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-500">Servidor <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="im-servidor"
+                         placeholder="máx. 32 caracteres" maxlength="32">
+                  <div class="field-error d-none" id="im-err-servidor"></div>
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label fw-500">Clave <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="im-clave"
+                         placeholder="máx. 32 caracteres" maxlength="32">
+                  <div class="field-error d-none" id="im-err-clave"></div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <label class="form-label fw-500">PIN <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control font-monospace" id="im-pin"
+                         placeholder="4 dígitos" maxlength="4">
+                  <div class="field-error d-none" id="im-err-pin"></div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <label class="form-label fw-500">PUK <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control font-monospace" id="im-puk"
+                         placeholder="8 dígitos" maxlength="8">
+                  <div class="field-error d-none" id="im-err-puk"></div>
+                </div>
+              </div>
+              <button type="button" class="btn btn-outline-primary btn-sm mt-3"
+                      onclick="app.agregarManual()">
+                <i class="bi bi-plus-lg me-1"></i>Añadir a la lista
+              </button>
+            </form>
+            <div id="manual-lista" class="mt-3"></div>
+          </div>
+
+        </div><!-- /tab-content -->
+      </div><!-- /modal-body -->
+
+      <div class="modal-footer">
+        <small class="text-muted me-auto" id="import-contador">Sin eSIMs para importar</small>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-avanza" id="btn-importar" disabled
+                onclick="app.confirmarImportar()">
+          <i class="bi bi-upload me-1"></i>Importar
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- Toast -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9000">
+  <div class="toast" id="app-toast" role="alert" aria-live="assertive" data-bs-delay="3500">
+    <div class="toast-header">
+      <i class="bi me-2" id="toast-icon"></i>
+      <strong class="me-auto" id="toast-titulo"></strong>
+      <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+    </div>
+    <div class="toast-body" id="toast-mensaje"></div>
+  </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+'use strict';
+
+const CONFIG = {
+  SIA_BASE: 'https://sia.avanzasolutions.es/api',
+};
+
+const PLANES = [
+  { id: 'esim-1gb',  nombre: 'eSIM 1GB',      precio: 4.99  },
+  { id: 'esim-5gb',  nombre: 'eSIM 5GB',       precio: 9.99  },
+  { id: 'esim-15gb', nombre: 'eSIM 15GB',      precio: 14.99 },
+  { id: 'esim-30gb', nombre: 'eSIM 30GB',      precio: 19.99 },
+  { id: 'esim-ilim', nombre: 'eSIM Ilimitada', precio: 29.99 },
+];
+
+const ESTADOS = {
+  free:        { label: 'Libre',      clase: 'badge-free'        },
+  assigned:    { label: 'Asignada',   clase: 'badge-assigned'    },
+  locked:      { label: 'Bloqueada',  clase: 'badge-locked'      },
+  activa:      { label: 'Activa',     clase: 'badge-activa'      },
+  pendiente:   { label: 'Pendiente',  clase: 'badge-pendiente'   },
+  suspendida:  { label: 'Suspendida', clase: 'badge-suspendida'  },
+  cancelada:   { label: 'Cancelada',  clase: 'badge-cancelada'   },
+  sin_asignar: { label: 'Sin asig.',  clase: 'badge-sin-asignar' },
+};
+
+// ── Datos mock (compatibilidad mientras no hay API) ──────────────
+const MOCK_ESIMS = [
+  {
+    id: 'esim-001', iccid: '8934614020000123456', estado: 'assigned',
+    servidor: 'srv01.avanza.es', clave: 'ClaveEjemplo01Mock', pin: '1234', puk: '12345678',
+    id_cliente: 100042, email: 'mgarcia@gmail.com', fecha_usado: '2024-01-15',
+  },
+  {
+    id: 'esim-002', iccid: '8934614020000234567', estado: 'free',
+    servidor: 'srv01.avanza.es', clave: 'ClaveEjemplo02Mock', pin: '2345', puk: '23456789',
+    id_cliente: null, email: null, fecha_usado: null,
+  },
+  {
+    id: 'esim-003', iccid: '8934614020000345678', estado: 'assigned',
+    servidor: 'srv02.avanza.es', clave: 'ClaveEjemplo03Mock', pin: '3456', puk: '34567890',
+    id_cliente: 200099, email: 'afernandez@hotmail.com', fecha_usado: '2024-02-20',
+  },
+  {
+    id: 'esim-004', iccid: '8934614020000456789', estado: 'locked',
+    servidor: 'srv02.avanza.es', clave: 'ClaveEjemplo04Mock', pin: '4567', puk: '45678901',
+    id_cliente: 300011, email: 'jlopez@yahoo.es', fecha_usado: '2023-10-05',
+  },
+  {
+    id: 'esim-005', iccid: '8934614020000567890', estado: 'free',
+    servidor: 'srv01.avanza.es', clave: 'ClaveEjemplo05Mock', pin: '5678', puk: '56789012',
+    id_cliente: null, email: null, fecha_usado: null,
+  },
+];
+
+// ── Data provider ────────────────────────────────────────────────
+const dataProvider = {
+  _store: [...MOCK_ESIMS],
+  _nextId: MOCK_ESIMS.length + 1,
+
+  // TODO: API → GET ${CONFIG.SIA_BASE}/esims
+  async getAll() {
+    await _delay(250);
+    return [...this._store];
+  },
+
+  // TODO: API → GET ${CONFIG.SIA_BASE}/esims/${id}
+  async getById(id) {
+    await _delay(150);
+    return this._store.find(e => e.id === id) ?? null;
+  },
+
+  // TODO: API → POST ${CONFIG.SIA_BASE}/esims
+  async create(datos) {
+    await _delay(300);
+    const nueva = {
+      ...datos,
+      id: `esim-${String(this._nextId++).padStart(3, '0')}`,
+    };
+    this._store.push(nueva);
+    return { ...nueva };
+  },
+
+  // TODO: API → PUT ${CONFIG.SIA_BASE}/esims/${id}
+  async update(id, datos) {
+    await _delay(300);
+    const idx = this._store.findIndex(e => e.id === id);
+    if (idx === -1) throw new Error('eSIM no encontrada');
+    this._store[idx] = { ...this._store[idx], ...datos };
+    return { ...this._store[idx] };
+  },
+
+  // TODO: API → DELETE ${CONFIG.SIA_BASE}/esims/${id}
+  async delete(id) {
+    await _delay(250);
+    const idx = this._store.findIndex(e => e.id === id);
+    if (idx === -1) throw new Error('eSIM no encontrada');
+    this._store.splice(idx, 1);
+  },
+};
+
+
+// ── Utilidades ───────────────────────────────────────────────────
+function esc(val) {
+  if (val === null || val === undefined) return '';
+  const div = document.createElement('div');
+  div.textContent = String(val);
+  return div.innerHTML;
+}
+
+function formatIccid(iccid) {
+  if (!iccid) return '—';
+  return iccid.replace(/(.{4})/g, '$1 ').trim();
+}
+
+function formatFecha(fecha) {
+  if (!fecha) return '—';
+  const [y, m, d] = fecha.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function validarEmail(email) {
+  return !email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+
+function normalizar(str) {
+  return String(str ?? '').toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+function _delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+
+// ── Módulo principal ─────────────────────────────────────────────
+const app = (() => {
+
+  const state = {
+    esims: [],
+    filtros: { busqueda: '', estado: ''},
+    pag: { pagina: 1, porPagina: 10 },
+    modal: { modo: 'alta', esimId: null },
+    pendienteEstadoId:   null,
+    pendienteEliminarId: null,
+  };
+
+  let bsModalEsim, bsModalEstado, bsModalConfirmar, bsModalImportar, bsToast;
+  let _importPendientes = [];
+
+  // ── Init ──────────────────────────────────────────────────────
+  async function init() {
+    _initBootstrap();
+    _bindEventos();
+    _initDropZone();
+    // TODO: autenticar con OyM antes de cargar datos
+    await cargarESims();
+  }
+
+  function _initBootstrap() {
+    bsModalEsim      = new bootstrap.Modal(document.getElementById('modal-esim'));
+    bsModalEstado    = new bootstrap.Modal(document.getElementById('modal-estado'));
+    bsModalConfirmar = new bootstrap.Modal(document.getElementById('modal-confirmar'));
+    bsModalImportar  = new bootstrap.Modal(document.getElementById('modal-importar'));
+    bsToast          = new bootstrap.Toast(document.getElementById('app-toast'));
+  }
+
+  function _bindEventos() {
+    document.getElementById('busqueda').addEventListener('input', () => {
+      state.filtros.busqueda = document.getElementById('busqueda').value;
+      state.pag.pagina = 1;
+      renderTabla();
+    });
+
+    document.getElementById('filtro-estado').addEventListener('change', () => {
+      state.filtros.estado = document.getElementById('filtro-estado').value;
+      state.pag.pagina = 1;
+      renderTabla();
+    });
+
+    document.getElementById('tbody-esims').addEventListener('click', e => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      const { action, id } = btn.dataset;
+      if (action === 'editar')        _abrirModalEdicion(id);
+      if (action === 'estado')        _abrirModalEstado(id);
+      if (action === 'eliminar')      _abrirModalEliminar(id);
+      if (action === 'toggle-secret') _toggleSecret(btn);
+    });
+  }
+
+  // ── Carga ─────────────────────────────────────────────────────
+  async function cargarESims() {
+    _mostrarCargando(true);
+    try {
+      state.esims = await dataProvider.getAll();
+      renderTabla();
+      _renderStats();
+    } catch (err) {
+      _toast('No se pudieron cargar las eSIMs.', 'danger');
+      console.error(err);
+    } finally {
+      _mostrarCargando(false);
+    }
+  }
+
+  // ── Filtrado ──────────────────────────────────────────────────
+  function _filtrarESims() {
+    const { busqueda, estado } = state.filtros;
+    const q = normalizar(busqueda);
+    return state.esims.filter(e => {
+      if (estado && e.estado !== estado) return false;
+      if (q) {
+        const texto = normalizar([
+          e.iccid,
+          e.id_cliente,
+          e.email,
+          e.servidor,
+        ].join(' '));
+        if (!texto.includes(q)) return false;
+      }
+      return true;
+    });
+  }
+
+  // ── Render tabla ──────────────────────────────────────────────
+  function renderTabla() {
+    const esimsF   = _filtrarESims();
+    const total    = esimsF.length;
+    const { pagina, porPagina } = state.pag;
+    const inicio   = (pagina - 1) * porPagina;
+    const fin      = inicio + porPagina;
+    const pagEsims = esimsF.slice(inicio, fin);
+
+    const emptyState     = document.getElementById('empty-state');
+    const tablaContainer = document.getElementById('tabla-container');
+    const tbody          = document.getElementById('tbody-esims');
+
+    if (total === 0) {
+      emptyState.classList.remove('d-none');
+      tablaContainer.classList.add('d-none');
+      return;
+    }
+
+    emptyState.classList.add('d-none');
+    tablaContainer.classList.remove('d-none');
+    tbody.innerHTML = pagEsims.map(_renderFila).join('');
+    _renderPaginacion(total, inicio, fin);
+  }
+
+  function _renderFila(e) {
+    const estado = ESTADOS[e.estado] ?? { label: e.estado, clase: 'bg-secondary' };
+
+    const clienteHtml = e.id_cliente
+      ? `<div class="fw-500">ID ${esc(e.id_cliente)}</div>`
+      : `<span class="text-muted fst-italic small">Sin cliente</span>`;
+
+    const emailHtml = e.email
+      ? `<small class="text-muted">${esc(e.email)}</small>`
+      : `<span class="text-muted">—</span>`;
+
+    return `
+      <tr>
+        <td><code class="iccid-code">${esc(formatIccid(e.iccid))}</code></td>
+        <td>${clienteHtml}</td>
+        <td>${emailHtml}</td>
+        <td><span class="badge ${esc(estado.clase)}">${esc(estado.label)}</span></td>
+        <td class="text-nowrap">
+          <span class="secret-value font-monospace" data-real="${esc(e.pin)}" data-visible="false">••••</span>
+          <button class="btn btn-link btn-sm p-0 ms-1 text-muted"
+                  data-action="toggle-secret" title="Mostrar / ocultar PIN">
+            <i class="bi bi-eye" aria-hidden="true"></i>
+          </button>
+        </td>
+        <td class="text-nowrap">
+          <span class="secret-value font-monospace" data-real="${esc(e.puk)}" data-visible="false">••••••••</span>
+          <button class="btn btn-link btn-sm p-0 ms-1 text-muted"
+                  data-action="toggle-secret" title="Mostrar / ocultar PUK">
+            <i class="bi bi-eye" aria-hidden="true"></i>
+          </button>
+        </td>
+        <td class="text-muted">${esc(formatFecha(e.fecha_usado))}</td>
+        <td>
+          <button class="btn btn-outline-primary btn-action me-1"
+                  data-action="editar" data-id="${esc(e.id)}" title="Editar">
+            <i class="bi bi-pencil" aria-hidden="true"></i>
+          </button>
+          <button class="btn btn-outline-secondary btn-action me-1"
+                  data-action="estado" data-id="${esc(e.id)}" title="Cambiar estado">
+            <i class="bi bi-toggle-on" aria-hidden="true"></i>
+          </button>
+          <button class="btn btn-outline-danger btn-action"
+                  data-action="eliminar" data-id="${esc(e.id)}" title="Eliminar">
+            <i class="bi bi-trash" aria-hidden="true"></i>
+          </button>
+        </td>
+      </tr>`;
+  }
+
+  function _renderStats() {
+    document.getElementById('stat-total').textContent     = state.esims.length;
+    document.getElementById('stat-libres').textContent    = state.esims.filter(e => e.estado === 'free' || e.estado === 'sin_asignar').length;
+    document.getElementById('stat-asignadas').textContent = state.esims.filter(e => e.estado === 'assigned' || e.estado === 'activa').length;
+    document.getElementById('stat-bloqueadas').textContent = state.esims.filter(e => e.estado === 'locked' || e.estado === 'suspendida' || e.estado === 'cancelada').length;
+  }
+
+  function _renderPaginacion(total, inicio, fin) {
+    const { pagina, porPagina } = state.pag;
+    const totalPags = Math.ceil(total / porPagina);
+
+    document.getElementById('paginacion-info').textContent =
+      `Mostrando ${Math.min(inicio + 1, total)}–${Math.min(fin, total)} de ${total} eSIMs`;
+
+    const contenedor = document.getElementById('paginacion-botones');
+    if (totalPags <= 1) { contenedor.innerHTML = ''; return; }
+
+    let html = '<nav><ul class="pagination pagination-sm mb-0">';
+    html += `<li class="page-item ${pagina === 1 ? 'disabled' : ''}">
+               <button class="page-link" data-pag="${pagina - 1}">‹</button></li>`;
+    for (let i = 1; i <= totalPags; i++) {
+      html += `<li class="page-item ${i === pagina ? 'active' : ''}">
+                 <button class="page-link" data-pag="${i}">${i}</button></li>`;
+    }
+    html += `<li class="page-item ${pagina === totalPags ? 'disabled' : ''}">
+               <button class="page-link" data-pag="${pagina + 1}">›</button></li>`;
+    html += '</ul></nav>';
+    contenedor.innerHTML = html;
+    contenedor.querySelectorAll('[data-pag]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.pag.pagina = Number(btn.dataset.pag);
+        renderTabla();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+  }
+
+  // ── Modal: Alta ───────────────────────────────────────────────
+  function abrirModalAlta() {
+    state.modal = { modo: 'alta', esimId: null };
+    document.getElementById('modal-esim-titulo').innerHTML =
+      '<i class="bi bi-plus-circle me-2"></i>Nueva eSIM';
+    _limpiarFormulario();
+    document.getElementById('f-estado').value = 'free';
+    bsModalEsim.show();
+  }
+
+  // ── Modal: Edición ────────────────────────────────────────────
+  async function _abrirModalEdicion(id) {
+    state.modal = { modo: 'edicion', esimId: id };
+    document.getElementById('modal-esim-titulo').innerHTML =
+      '<i class="bi bi-pencil me-2"></i>Editar eSIM';
+    _limpiarFormulario();
+    try {
+      const esim = await dataProvider.getById(id);
+      if (!esim) { _toast('eSIM no encontrada.', 'danger'); return; }
+      _rellenarFormulario(esim);
+      bsModalEsim.show();
+    } catch (err) {
+      _toast('No se pudo cargar la eSIM.', 'danger');
+      console.error(err);
+    }
+  }
+
+  function _rellenarFormulario(esim) {
+    document.getElementById('f-iccid').value        = esim.iccid ?? '';
+    document.getElementById('f-estado').value       = esim.estado ?? 'free';
+    document.getElementById('f-servidor').value     = esim.servidor ?? '';
+    document.getElementById('f-clave').value        = esim.clave ?? '';
+    document.getElementById('f-pin').value          = esim.pin ?? '';
+    document.getElementById('f-puk').value          = esim.puk ?? '';
+    document.getElementById('f-id-cliente').value   = esim.id_cliente ?? '';
+    document.getElementById('f-email').value        = esim.email ?? '';
+    document.getElementById('f-fecha-usado').value  = esim.fecha_usado ?? '';
+  }
+
+  function _limpiarFormulario() {
+    ['f-iccid','f-servidor','f-clave','f-pin','f-puk','f-id-cliente','f-email','f-fecha-usado']
+      .forEach(id => { document.getElementById(id).value = ''; });
+    _limpiarErrores();
+  }
+
+  function _limpiarErrores() {
+    document.querySelectorAll('.field-error').forEach(el => {
+      el.textContent = ''; el.classList.add('d-none');
+    });
+    document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+  }
+
+  // ── Guardar ───────────────────────────────────────────────────
+  async function guardarEsim() {
+    _limpiarErrores();
+    if (!_validarFormulario()) return;
+
+    const iccid = document.getElementById('f-iccid').value.trim();
+    const estado = document.getElementById('f-estado').value;
+    const datos = {
+      iccid,
+      estado,
+      servidor:    document.getElementById('f-servidor').value.trim(),
+      clave:       document.getElementById('f-clave').value.trim(),
+      pin:         document.getElementById('f-pin').value.trim(),
+      puk:         document.getElementById('f-puk').value.trim(),
+      id_cliente:  document.getElementById('f-id-cliente').value
+                     ? Number(document.getElementById('f-id-cliente').value) : null,
+      email:       document.getElementById('f-email').value.trim() || null,
+      fecha_usado: document.getElementById('f-fecha-usado').value || null,
+    };
+
+    const btnGuardar = document.getElementById('btn-guardar');
+    btnGuardar.disabled = true;
+    btnGuardar.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Guardando…';
+
+    try {
+      if (state.modal.modo === 'alta') {
+        await dataProvider.create(datos);
+        _toast('eSIM creada correctamente.', 'success');
+      } else {
+        await dataProvider.update(state.modal.esimId, datos);
+        _toast('eSIM actualizada correctamente.', 'success');
+      }
+      bsModalEsim.hide();
+      await cargarESims();
+    } catch (err) {
+      _toast('Error al guardar.', 'danger');
+      console.error(err);
+    } finally {
+      btnGuardar.disabled = false;
+      btnGuardar.innerHTML = '<i class="bi bi-check-lg me-1"></i>Guardar';
+    }
+  }
+
+  function _validarFormulario() {
+    let valido = true;
+
+    const iccid = document.getElementById('f-iccid').value.trim();
+    if (!/^\d{19}$/.test(iccid)) {
+      _mostrarErrorCampo('f-iccid', 'err-iccid', 'El ICCID debe tener exactamente 19 dígitos.');
+      valido = false;
+    }
+
+    const servidor = document.getElementById('f-servidor').value.trim();
+    if (!servidor) {
+      _mostrarErrorCampo('f-servidor', 'err-servidor', 'El servidor es obligatorio.');
+      valido = false;
+    }
+
+    const clave = document.getElementById('f-clave').value.trim();
+    if (!clave) {
+      _mostrarErrorCampo('f-clave', 'err-clave', 'La clave es obligatoria.');
+      valido = false;
+    }
+
+    const pin = document.getElementById('f-pin').value.trim();
+    if (!/^\d{4}$/.test(pin)) {
+      _mostrarErrorCampo('f-pin', 'err-pin', 'El PIN debe tener exactamente 4 dígitos.');
+      valido = false;
+    }
+
+    const puk = document.getElementById('f-puk').value.trim();
+    if (!/^\d{8}$/.test(puk)) {
+      _mostrarErrorCampo('f-puk', 'err-puk', 'El PUK debe tener exactamente 8 dígitos.');
+      valido = false;
+    }
+
+    const idCliente = document.getElementById('f-id-cliente').value;
+    if (idCliente && !/^\d{1,6}$/.test(idCliente)) {
+      _mostrarErrorCampo('f-id-cliente', 'err-id-cliente', 'ID de cliente inválido (máx. 6 dígitos).');
+      valido = false;
+    }
+
+    const email = document.getElementById('f-email').value.trim();
+    if (!validarEmail(email)) {
+      _mostrarErrorCampo('f-email', 'err-email', 'El formato del email no es válido.');
+      valido = false;
+    }
+
+    return valido;
+  }
+
+  function _mostrarErrorCampo(inputId, errorId, msg) {
+    document.getElementById(inputId).classList.add('is-invalid');
+    const errEl = document.getElementById(errorId);
+    if (errEl) { errEl.textContent = msg; errEl.classList.remove('d-none'); }
+  }
+
+  // ── Modal: Cambio de estado ───────────────────────────────────
+  function _abrirModalEstado(id) {
+    state.pendienteEstadoId = id;
+    const esim = state.esims.find(e => e.id === id);
+    if (!esim) return;
+    document.getElementById('modal-estado-iccid').textContent = formatIccid(esim.iccid);
+    document.getElementById('select-nuevo-estado').value = esim.estado;
+    bsModalEstado.show();
+  }
+
+  async function confirmarCambioEstado() {
+    const id          = state.pendienteEstadoId;
+    const nuevoEstado = document.getElementById('select-nuevo-estado').value;
+    const extra = nuevoEstado === 'assigned'
+      ? { fecha_usado: new Date().toISOString().slice(0, 10) }
+      : {};
+    try {
+      await dataProvider.update(id, { estado: nuevoEstado, ...extra });
+      _toast('Estado actualizado.', 'success');
+      bsModalEstado.hide();
+      await cargarESims();
+    } catch (err) {
+      _toast('Error al cambiar el estado.', 'danger');
+      console.error(err);
+    }
+  }
+
+  // ── Modal: Eliminar ───────────────────────────────────────────
+  function _abrirModalEliminar(id) {
+    state.pendienteEliminarId = id;
+    const esim = state.esims.find(e => e.id === id);
+    if (!esim) return;
+    document.getElementById('modal-confirmar-iccid').textContent = formatIccid(esim.iccid);
+    bsModalConfirmar.show();
+  }
+
+  async function confirmarEliminar() {
+    const id = state.pendienteEliminarId;
+    try {
+      await dataProvider.delete(id);
+      _toast('eSIM eliminada.', 'success');
+      bsModalConfirmar.hide();
+      await cargarESims();
+    } catch (err) {
+      _toast('Error al eliminar.', 'danger');
+      console.error(err);
+    }
+  }
+
+  // ── Toggle PIN / PUK ─────────────────────────────────────────
+  function _toggleSecret(btn) {
+    const span = btn.closest('td').querySelector('.secret-value');
+    const icon = btn.querySelector('i');
+    const visible = span.dataset.visible === 'true';
+    span.textContent = visible ? (span.dataset.real.length === 4 ? '••••' : '••••••••') : span.dataset.real;
+    span.dataset.visible = String(!visible);
+    icon.className = visible ? 'bi bi-eye' : 'bi bi-eye-slash';
+  }
+
+  // ── Limpiar filtros ───────────────────────────────────────────
+  function limpiarFiltros() {
+    state.filtros = { busqueda: '', estado: '' };
+    state.pag.pagina = 1;
+    document.getElementById('busqueda').value      = '';
+    document.getElementById('filtro-estado').value = '';
+    renderTabla();
+  }
+
+
+  // ════════════════════════════════════════════════════════════
+  // IMPORTAR eSIMs
+  // ════════════════════════════════════════════════════════════
+
+  function abrirModalImportar() {
+    _importPendientes = [];
+    _actualizarContadorImport();
+
+    document.getElementById('file-input').value        = '';
+    document.getElementById('fichero-preview').innerHTML = '';
+    document.getElementById('fichero-nombre').classList.add('d-none');
+    document.getElementById('csv-textarea').value      = '';
+    document.getElementById('csv-preview').innerHTML   = '';
+    document.getElementById('manual-lista').innerHTML  = '';
+    ['im-iccid','im-servidor','im-clave','im-pin','im-puk'].forEach(id => {
+      document.getElementById(id).value = '';
+      document.getElementById(id).classList.remove('is-invalid');
+    });
+    document.querySelectorAll('[id^="im-err-"]').forEach(el => {
+      el.textContent = ''; el.classList.add('d-none');
+    });
+
+    bootstrap.Tab.getOrCreateInstance(
+      document.getElementById('tab-fichero-btn')
+    ).show();
+
+    bsModalImportar.show();
+  }
+
+  // ── Parsear CSV ───────────────────────────────────────────────
+  function _parsearLineasCSV(text) {
+    const lineas = text.trim().split(/\r?\n/).filter(l => l.trim());
+    if (!lineas.length) return { validas: [], errores: [] };
+
+    const sep = lineas[0].includes(';') ? ';' : ',';
+    const primerCampo = lineas[0].split(sep)[0].trim().toLowerCase().replace(/^["']|["']$/g, '');
+    const tieneHeader = primerCampo === 'iccid' || !/^\d/.test(primerCampo);
+    const datos = tieneHeader ? lineas.slice(1) : lineas;
+
+    const validas = [], errores = [];
+
+    datos.forEach((linea, i) => {
+      const cols = linea.split(sep).map(c => c.trim().replace(/^["']|["']$/g, ''));
+      const [iccid = '', servidor = '', clave = '', pin = '', puk = ''] = cols;
+      const err = _validarCamposImport({ iccid, servidor, clave, pin, puk });
+      if (err) {
+        errores.push({ fila: i + (tieneHeader ? 2 : 1), linea, error: err });
+      } else {
+        if (!validas.find(v => v.iccid === iccid) && !_importPendientes.find(p => p.iccid === iccid)) {
+          validas.push({ iccid, servidor, clave, pin, puk });
+        }
+      }
+    });
+
+    return { validas, errores };
+  }
+
+  function _validarCamposImport({ iccid, servidor, clave, pin, puk }) {
+    if (!/^\d{19}$/.test(iccid))      return 'ICCID inválido (19 dígitos exactos)';
+    if (!servidor || servidor.length > 32) return 'Servidor inválido';
+    if (!clave || clave.length > 32)   return 'Clave inválida';
+    if (!/^\d{4}$/.test(pin))          return 'PIN inválido (4 dígitos)';
+    if (!/^\d{8}$/.test(puk))          return 'PUK inválido (8 dígitos)';
+    return null;
+  }
+
+  function _renderPreviewImport(validas, errores, contenedor) {
+    const total = validas.length + errores.length;
+    if (total === 0) {
+      contenedor.innerHTML = '<p class="text-muted small mt-2">No se encontraron datos.</p>';
+      return;
+    }
+
+    const duplas = validas.filter(v => _importPendientes.find(p => p.iccid === v.iccid));
+    const nuevas = validas.filter(v => !_importPendientes.find(p => p.iccid === v.iccid));
+
+    let html = `<div class="d-flex flex-wrap gap-3 my-2" style="font-size:.82rem">
+      <span class="text-success"><i class="bi bi-check-circle me-1"></i>${nuevas.length} válidas nuevas</span>
+      ${duplas.length ? `<span class="text-warning"><i class="bi bi-exclamation-circle me-1"></i>${duplas.length} ya en lista</span>` : ''}
+      ${errores.length ? `<span class="text-danger"><i class="bi bi-x-circle me-1"></i>${errores.length} con error</span>` : ''}
+    </div>`;
+
+    if (validas.length || errores.length) {
+      html += `<div class="import-preview border rounded">
+        <table class="table table-sm mb-0" style="font-size:.78rem">
+          <thead><tr>
+            <th>ICCID</th><th>Servidor</th><th>PIN</th><th>PUK</th><th></th>
+          </tr></thead>
+          <tbody>`;
+
+      validas.forEach(e => {
+        const esDup = !!_importPendientes.find(p => p.iccid === e.iccid);
+        html += `<tr class="${esDup ? '' : 'row-ok'}">
+          <td><code>${esc(e.iccid)}</code></td>
+          <td>${esc(e.servidor)}</td>
+          <td><code>${esc(e.pin)}</code></td>
+          <td><code>${esc(e.puk)}</code></td>
+          <td>${esDup
+            ? '<i class="bi bi-dash-circle text-warning" title="Ya añadida"></i>'
+            : '<i class="bi bi-check-circle-fill text-success"></i>'
+          }</td>
+        </tr>`;
+      });
+
+      errores.forEach(e => {
+        html += `<tr class="row-err">
+          <td colspan="4" class="text-danger" style="font-size:.75rem">
+            Fila ${e.fila}: ${esc(e.error)} <span class="text-muted ms-1">${esc(e.linea.substring(0, 60))}</span>
+          </td>
+          <td><i class="bi bi-x-circle-fill text-danger"></i></td>
+        </tr>`;
+      });
+
+      html += '</tbody></table></div>';
+    }
+
+    contenedor.innerHTML = html;
+
+    nuevas.forEach(v => _importPendientes.push(v));
+    _actualizarContadorImport();
+  }
+
+  // ── Drop zone ─────────────────────────────────────────────────
+  function _initDropZone() {
+    const zone = document.getElementById('drop-zone');
+    const input = document.getElementById('file-input');
+
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault(); zone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) _procesarFichero(file);
+    });
+
+    input.addEventListener('change', () => {
+      if (input.files[0]) _procesarFichero(input.files[0]);
+    });
+  }
+
+  function _procesarFichero(file) {
+    const nombreEl = document.getElementById('fichero-nombre');
+    nombreEl.querySelector('span').textContent = file.name;
+    nombreEl.classList.remove('d-none');
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      const { validas, errores } = _parsearLineasCSV(e.target.result);
+      _renderPreviewImport(validas, errores, document.getElementById('fichero-preview'));
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
+
+  // ── Tab CSV ───────────────────────────────────────────────────
+  function analizarCSV() {
+    const text = document.getElementById('csv-textarea').value;
+    if (!text.trim()) {
+      document.getElementById('csv-preview').innerHTML =
+        '<p class="text-muted small mt-2">Pega datos antes de analizar.</p>';
+      return;
+    }
+    const { validas, errores } = _parsearLineasCSV(text);
+    _renderPreviewImport(validas, errores, document.getElementById('csv-preview'));
+  }
+
+  // ── Tab Manual ────────────────────────────────────────────────
+  function agregarManual() {
+    ['im-iccid','im-servidor','im-clave','im-pin','im-puk'].forEach(id => {
+      document.getElementById(id).classList.remove('is-invalid');
+    });
+    document.querySelectorAll('[id^="im-err-"]').forEach(el => {
+      el.textContent = ''; el.classList.add('d-none');
+    });
+
+    const iccid    = document.getElementById('im-iccid').value.trim();
+    const servidor = document.getElementById('im-servidor').value.trim();
+    const clave    = document.getElementById('im-clave').value.trim();
+    const pin      = document.getElementById('im-pin').value.trim();
+    const puk      = document.getElementById('im-puk').value.trim();
+
+    let hayError = false;
+
+    if (!/^\d{19}$/.test(iccid)) {
+      _mostrarErrorImport('im-iccid', 'im-err-iccid', 'ICCID de 19 dígitos exactos');
+      hayError = true;
+    } else if (_importPendientes.find(p => p.iccid === iccid)) {
+      _mostrarErrorImport('im-iccid', 'im-err-iccid', 'Este ICCID ya está en la lista');
+      hayError = true;
+    }
+    if (!servidor) {
+      _mostrarErrorImport('im-servidor', 'im-err-servidor', 'Obligatorio');
+      hayError = true;
+    }
+    if (!clave) {
+      _mostrarErrorImport('im-clave', 'im-err-clave', 'Obligatorio');
+      hayError = true;
+    }
+    if (!/^\d{4}$/.test(pin)) {
+      _mostrarErrorImport('im-pin', 'im-err-pin', '4 dígitos');
+      hayError = true;
+    }
+    if (!/^\d{8}$/.test(puk)) {
+      _mostrarErrorImport('im-puk', 'im-err-puk', '8 dígitos');
+      hayError = true;
+    }
+    if (hayError) return;
+
+    _importPendientes.push({ iccid, servidor, clave, pin, puk });
+    ['im-iccid','im-servidor','im-clave','im-pin','im-puk'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('im-iccid').focus();
+    _renderListaManual();
+    _actualizarContadorImport();
+  }
+
+  function _mostrarErrorImport(inputId, errorId, msg) {
+    document.getElementById(inputId).classList.add('is-invalid');
+    const el = document.getElementById(errorId);
+    el.textContent = msg; el.classList.remove('d-none');
+  }
+
+  function _renderListaManual() {
+    const cont = document.getElementById('manual-lista');
+    if (!_importPendientes.length) { cont.innerHTML = ''; return; }
+
+    let html = `<p class="small fw-500 mb-1">
+      <i class="bi bi-list-check me-1"></i>
+      ${_importPendientes.length} eSIM${_importPendientes.length > 1 ? 's' : ''} en la lista:
+    </p>
+    <div class="import-preview border rounded">
+      <table class="table table-sm mb-0" style="font-size:.78rem">
+        <thead><tr><th>ICCID</th><th>Servidor</th><th>PIN</th><th>PUK</th><th></th></tr></thead>
+        <tbody>`;
+
+    _importPendientes.forEach((e, idx) => {
+      html += `<tr class="row-ok">
+        <td><code>${esc(e.iccid)}</code></td>
+        <td>${esc(e.servidor)}</td>
+        <td><code>${esc(e.pin)}</code></td>
+        <td><code>${esc(e.puk)}</code></td>
+        <td>
+          <button class="btn btn-link btn-sm p-0 text-danger"
+                  onclick="app.quitarManual(${idx})" title="Quitar">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </td>
+      </tr>`;
+    });
+
+    html += '</tbody></table></div>';
+    cont.innerHTML = html;
+  }
+
+  function quitarManual(idx) {
+    _importPendientes.splice(idx, 1);
+    _renderListaManual();
+    _actualizarContadorImport();
+  }
+
+  function _actualizarContadorImport() {
+    const n = _importPendientes.length;
+    document.getElementById('import-contador').textContent =
+      n === 0 ? 'Sin eSIMs para importar'
+      : n === 1 ? '1 eSIM lista para importar'
+      : `${n} eSIMs listas para importar`;
+    document.getElementById('btn-importar').disabled = n === 0;
+  }
+
+  async function confirmarImportar() {
+    if (!_importPendientes.length) return;
+
+    const btn = document.getElementById('btn-importar');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Importando…';
+
+    try {
+      for (const esim of _importPendientes) {
+        await dataProvider.create({
+          iccid:       esim.iccid,
+          servidor:    esim.servidor,
+          clave:       esim.clave,
+          pin:         esim.pin,
+          puk:         esim.puk,
+          estado:      'free',
+          id_cliente:  null,
+          email:       null,
+          fecha_usado: null,
+        });
+      }
+      const n = _importPendientes.length;
+      _toast(`${n} eSIM${n > 1 ? 's' : ''} importada${n > 1 ? 's' : ''} correctamente.`, 'success');
+      bsModalImportar.hide();
+      await cargarESims();
+    } catch (err) {
+      _toast('Error al importar las eSIMs.', 'danger');
+      console.error(err);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-upload me-1"></i>Importar';
+    }
+  }
+
+
+  // ── Helpers UI ────────────────────────────────────────────────
+  function _mostrarCargando(show) {
+    document.getElementById('loading-overlay').classList.toggle('d-none', !show);
+  }
+
+  function _toast(msg, tipo) {
+    const iconos = {
+      success: 'bi-check-circle-fill text-success',
+      danger:  'bi-exclamation-circle-fill text-danger',
+    };
+    document.getElementById('toast-icon').className = `bi ${iconos[tipo] ?? iconos.success} me-2`;
+    document.getElementById('toast-titulo').textContent = tipo === 'success' ? 'Listo' : 'Error';
+    document.getElementById('toast-mensaje').textContent = msg;
+    bsToast.show();
+  }
+
+  return {
+    init,
+    abrirModalAlta, guardarEsim, confirmarCambioEstado, confirmarEliminar, limpiarFiltros,
+    abrirModalImportar, analizarCSV, agregarManual, quitarManual, confirmarImportar,
+  };
+
+})();
+
+document.addEventListener('DOMContentLoaded', () => app.init());
+</script>
+</body>
+</html>
