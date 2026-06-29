@@ -1,4 +1,4 @@
 FROM nginx:alpine
 COPY esims.html /usr/share/nginx/html/index.html
-COPY config.example.js /usr/share/nginx/html/config.example.js
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80

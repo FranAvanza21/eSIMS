@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Gestión de tarjetas eSIM — AVANZA FIBRA">
+  <meta name="theme-color" content="#0d1f4e">
   <title>Gestión de eSIMs — AVANZA FIBRA</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" crossorigin="anonymous">
   <style>
     :root {
       --avanza-dark:    #0d1f4e;
@@ -39,7 +41,7 @@
       padding: 0.8rem 1rem;
     }
     .stat-chip .stat-num {
-      font-size: 1.6rem;
+      font-size: clamp(1.2rem, 4vw, 1.6rem);
       font-weight: 700;
       line-height: 1;
     }
@@ -58,6 +60,7 @@
       background: #f8f9fa;
       padding: 2px 6px;
       border-radius: 4px;
+      word-break: break-all;
     }
 
     .badge-activa      { background-color: #198754; color: #fff; }
@@ -92,7 +95,8 @@
       opacity: .35;
     }
 
-    .btn-action { padding: 0.2rem 0.45rem; font-size: 0.8rem; }
+    .btn-action { padding: 0.45rem 0.6rem; font-size: 0.8rem; min-height: 44px; min-width: 44px; }
+    .btn-secret-toggle { padding: 0.25rem 0.5rem; min-height: 44px; min-width: 36px; vertical-align: middle; }
 
     .loading-overlay {
       position: fixed;
@@ -112,6 +116,9 @@
 
     .fw-500 { font-weight: 500; }
     .fw-600 { font-weight: 600; }
+
+    .navbar-subtitle { font-size: .85rem; }
+    .toast-container-app { z-index: 9000; }
 
     .form-section-label {
       font-size: 0.7rem;
@@ -138,7 +145,7 @@
     }
     .drop-zone .drop-icon { font-size: 2.5rem; opacity: .4; margin-bottom: .5rem; }
 
-    .import-preview { max-height: 260px; overflow-y: auto; }
+    .import-preview { max-height: 260px; overflow-y: auto; overflow-x: auto; }
     .import-preview .row-ok   td { background-color: #f0fff4; }
     .import-preview .row-err  td { background-color: #fff5f5; }
 
@@ -168,7 +175,7 @@
         <i class="bi bi-sim-fill me-2"></i>AVANZA FIBRA
       </span>
       <span class="text-white-50 d-none d-md-inline">|</span>
-      <span class="text-white-50 d-none d-md-inline" style="font-size:.85rem">Gestión de eSIMs</span>
+      <span class="text-white-50 d-none d-md-inline navbar-subtitle">Gestión de eSIMs</span>
     </div>
     <!-- TODO: mostrar usuario autenticado de la plataforma OyM -->
     <small class="text-white-50 d-none d-lg-inline" id="usuario-info"></small>
@@ -228,7 +235,7 @@
       </select>
     </div>
 
-    <div class="col-12 col-md-auto ms-md-auto d-flex gap-2">
+    <div class="col-12 col-md-auto ms-md-auto d-flex gap-2 flex-wrap">
       <button class="btn btn-outline-secondary" onclick="app.abrirModalImportar()">
         <i class="bi bi-upload me-1"></i>Importar
       </button>
@@ -266,7 +273,7 @@
               <th>PIN</th>
               <th>PUK</th>
               <th>Fecha uso</th>
-              <th style="width:115px"></th>
+              <th class="text-nowrap"></th>
             </tr>
           </thead>
           <tbody id="tbody-esims"></tbody>
@@ -388,11 +395,11 @@
 <!-- ═══════════════════════════════════════════════
      MODAL: Cambio de estado
      ═══════════════════════════════════════════════ -->
-<div class="modal fade" id="modal-estado" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modal-estado" tabindex="-1" aria-labelledby="modal-estado-titulo" aria-hidden="true">
   <div class="modal-dialog modal-sm">
     <div class="modal-content">
       <div class="modal-header">
-        <h6 class="modal-title"><i class="bi bi-toggle-on me-2"></i>Cambiar estado</h6>
+        <h6 class="modal-title" id="modal-estado-titulo"><i class="bi bi-toggle-on me-2"></i>Cambiar estado</h6>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
@@ -416,11 +423,11 @@
 <!-- ═══════════════════════════════════════════════
      MODAL: Confirmar eliminación
      ═══════════════════════════════════════════════ -->
-<div class="modal fade" id="modal-confirmar" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modal-confirmar" tabindex="-1" aria-labelledby="modal-confirmar-titulo" aria-hidden="true">
   <div class="modal-dialog modal-sm">
     <div class="modal-content">
       <div class="modal-header bg-danger text-white">
-        <h6 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Confirmar eliminación</h6>
+        <h6 class="modal-title" id="modal-confirmar-titulo"><i class="bi bi-exclamation-triangle me-2"></i>Confirmar eliminación</h6>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
@@ -441,12 +448,12 @@
 <!-- ═══════════════════════════════════════════════
      MODAL: Importar eSIMs
      ═══════════════════════════════════════════════ -->
-<div class="modal fade" id="modal-importar" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modal-importar" tabindex="-1" aria-labelledby="modal-importar-titulo" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content">
 
       <div class="modal-header modal-header-avanza">
-        <h5 class="modal-title">
+        <h5 class="modal-title" id="modal-importar-titulo">
           <i class="bi bi-upload me-2"></i>Importar eSIMs
         </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -489,9 +496,8 @@
               <div class="drop-icon"><i class="bi bi-cloud-upload"></i></div>
               <p class="mb-1 fw-500">Arrastra tu fichero aquí</p>
               <p class="small mb-2">o haz clic para seleccionarlo</p>
-              <p class="mb-0" style="font-size:.75rem;color:#adb5bd">
-                Formatos aceptados: CSV, TXT &nbsp;·&nbsp;
-                Columnas: <code>iccid, servidor, clave, pin, puk</code>
+              <p class="mb-0 d-none d-sm-block" style="font-size:.75rem;color:#adb5bd">
+                Formatos: CSV, TXT &nbsp;·&nbsp; Columnas: <code>iccid, servidor, clave, pin, puk</code>
               </p>
             </div>
             <input type="file" id="file-input" accept=".csv,.txt" class="d-none">
@@ -578,7 +584,7 @@
 
 
 <!-- Toast -->
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9000">
+<div class="position-fixed bottom-0 end-0 p-3 toast-container-app">
   <div class="toast" id="app-toast" role="alert" aria-live="assertive" data-bs-delay="3500">
     <div class="toast-header">
       <i class="bi me-2" id="toast-icon"></i>
@@ -590,13 +596,15 @@
 </div>
 
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<!-- config.js se carga en producción con los valores reales; si no existe, los valores por defecto abajo aplican -->
+<script src="config.js" onerror="void 0"></script>
 <script>
 'use strict';
 
-const CONFIG = {
+const CONFIG = Object.assign({
   SIA_BASE: 'https://sia.avanzasolutions.es/api',
-};
+}, window.APP_CONFIG || {});
 
 const PLANES = [
   { id: 'esim-1gb',  nombre: 'eSIM 1GB',      precio: 4.99  },
@@ -860,30 +868,30 @@ const app = (() => {
         <td><span class="badge ${esc(estado.clase)}">${esc(estado.label)}</span></td>
         <td class="text-nowrap">
           <span class="secret-value font-monospace" data-real="${esc(e.pin)}" data-visible="false">••••</span>
-          <button class="btn btn-link btn-sm p-0 ms-1 text-muted"
-                  data-action="toggle-secret" title="Mostrar / ocultar PIN">
+          <button class="btn btn-link btn-sm btn-secret-toggle ms-1 text-muted"
+                  data-action="toggle-secret" title="Mostrar / ocultar PIN" aria-label="Mostrar PIN">
             <i class="bi bi-eye" aria-hidden="true"></i>
           </button>
         </td>
         <td class="text-nowrap">
           <span class="secret-value font-monospace" data-real="${esc(e.puk)}" data-visible="false">••••••••</span>
-          <button class="btn btn-link btn-sm p-0 ms-1 text-muted"
-                  data-action="toggle-secret" title="Mostrar / ocultar PUK">
+          <button class="btn btn-link btn-sm btn-secret-toggle ms-1 text-muted"
+                  data-action="toggle-secret" title="Mostrar / ocultar PUK" aria-label="Mostrar PUK">
             <i class="bi bi-eye" aria-hidden="true"></i>
           </button>
         </td>
         <td class="text-muted">${esc(formatFecha(e.fecha_usado))}</td>
         <td>
           <button class="btn btn-outline-primary btn-action me-1"
-                  data-action="editar" data-id="${esc(e.id)}" title="Editar">
+                  data-action="editar" data-id="${esc(e.id)}" title="Editar" aria-label="Editar eSIM">
             <i class="bi bi-pencil" aria-hidden="true"></i>
           </button>
           <button class="btn btn-outline-secondary btn-action me-1"
-                  data-action="estado" data-id="${esc(e.id)}" title="Cambiar estado">
+                  data-action="estado" data-id="${esc(e.id)}" title="Cambiar estado" aria-label="Cambiar estado">
             <i class="bi bi-toggle-on" aria-hidden="true"></i>
           </button>
           <button class="btn btn-outline-danger btn-action"
-                  data-action="eliminar" data-id="${esc(e.id)}" title="Eliminar">
+                  data-action="eliminar" data-id="${esc(e.id)}" title="Eliminar" aria-label="Eliminar eSIM">
             <i class="bi bi-trash" aria-hidden="true"></i>
           </button>
         </td>
@@ -907,15 +915,33 @@ const app = (() => {
     const contenedor = document.getElementById('paginacion-botones');
     if (totalPags <= 1) { contenedor.innerHTML = ''; return; }
 
-    let html = '<nav><ul class="pagination pagination-sm mb-0">';
+    const paginasVisibles = () => {
+      if (totalPags <= 7) return Array.from({ length: totalPags }, (_, i) => i + 1);
+      const delta = 1;
+      const rango = new Set([1, totalPags]);
+      for (let i = Math.max(2, pagina - delta); i <= Math.min(totalPags - 1, pagina + delta); i++) rango.add(i);
+      const sorted = [...rango].sort((a, b) => a - b);
+      const result = [];
+      sorted.forEach((n, i) => {
+        if (i > 0 && n - sorted[i - 1] > 1) result.push('…');
+        result.push(n);
+      });
+      return result;
+    };
+
+    let html = '<nav aria-label="Paginación"><ul class="pagination pagination-sm mb-0">';
     html += `<li class="page-item ${pagina === 1 ? 'disabled' : ''}">
-               <button class="page-link" data-pag="${pagina - 1}">‹</button></li>`;
-    for (let i = 1; i <= totalPags; i++) {
-      html += `<li class="page-item ${i === pagina ? 'active' : ''}">
-                 <button class="page-link" data-pag="${i}">${i}</button></li>`;
+               <button class="page-link" data-pag="${pagina - 1}" aria-label="Página anterior">‹</button></li>`;
+    for (const p of paginasVisibles()) {
+      if (p === '…') {
+        html += `<li class="page-item disabled"><span class="page-link">…</span></li>`;
+      } else {
+        html += `<li class="page-item ${p === pagina ? 'active' : ''}">
+                   <button class="page-link" data-pag="${p}" ${p === pagina ? 'aria-current="page"' : ''}>${p}</button></li>`;
+      }
     }
     html += `<li class="page-item ${pagina === totalPags ? 'disabled' : ''}">
-               <button class="page-link" data-pag="${pagina + 1}">›</button></li>`;
+               <button class="page-link" data-pag="${pagina + 1}" aria-label="Página siguiente">›</button></li>`;
     html += '</ul></nav>';
     contenedor.innerHTML = html;
     contenedor.querySelectorAll('[data-pag]').forEach(btn => {
@@ -1045,13 +1071,13 @@ const app = (() => {
 
     const pin = document.getElementById('f-pin').value.trim();
     if (!/^\d{4}$/.test(pin)) {
-      _mostrarErrorCampo('f-pin', 'err-pin', 'El PIN debe tener exactamente 4 dígitos.');
+      _mostrarErrorCampo('f-pin', 'err-pin', 'Debe tener 4 dígitos.');
       valido = false;
     }
 
     const puk = document.getElementById('f-puk').value.trim();
     if (!/^\d{8}$/.test(puk)) {
-      _mostrarErrorCampo('f-puk', 'err-puk', 'El PUK debe tener exactamente 8 dígitos.');
+      _mostrarErrorCampo('f-puk', 'err-puk', 'Debe tener 8 dígitos.');
       valido = false;
     }
 
@@ -1133,6 +1159,10 @@ const app = (() => {
     span.textContent = visible ? (span.dataset.real.length === 4 ? '••••' : '••••••••') : span.dataset.real;
     span.dataset.visible = String(!visible);
     icon.className = visible ? 'bi bi-eye' : 'bi bi-eye-slash';
+    const label = btn.getAttribute('aria-label') || '';
+    btn.setAttribute('aria-label', label.startsWith('Mostrar')
+      ? label.replace('Mostrar', 'Ocultar')
+      : label.replace('Ocultar', 'Mostrar'));
   }
 
   // ── Limpiar filtros ───────────────────────────────────────────
@@ -1228,7 +1258,7 @@ const app = (() => {
     </div>`;
 
     if (validas.length || errores.length) {
-      html += `<div class="import-preview border rounded">
+      html += `<div class="import-preview border rounded" style="overflow-x:auto">
         <table class="table table-sm mb-0" style="font-size:.78rem">
           <thead><tr>
             <th>ICCID</th><th>Servidor</th><th>PIN</th><th>PUK</th><th></th>
@@ -1375,7 +1405,7 @@ const app = (() => {
       <i class="bi bi-list-check me-1"></i>
       ${_importPendientes.length} eSIM${_importPendientes.length > 1 ? 's' : ''} en la lista:
     </p>
-    <div class="import-preview border rounded">
+    <div class="import-preview border rounded" style="overflow-x:auto">
       <table class="table table-sm mb-0" style="font-size:.78rem">
         <thead><tr><th>ICCID</th><th>Servidor</th><th>PIN</th><th>PUK</th><th></th></tr></thead>
         <tbody>`;
