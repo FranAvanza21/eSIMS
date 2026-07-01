@@ -583,6 +583,128 @@
 </div>
 
 
+<!-- ═══════════════════════════════════════════════
+     MODAL: QR de activación
+     ═══════════════════════════════════════════════ -->
+<div class="modal fade" id="modal-qr" tabindex="-1" aria-labelledby="modal-qr-titulo" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 480px;">
+    <div class="modal-content">
+
+      <div class="modal-header modal-header-avanza">
+        <h5 class="modal-title" id="modal-qr-titulo">
+          <i class="bi bi-qr-code me-2" aria-hidden="true"></i>Código QR de activación
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <div class="modal-body text-center px-4 py-4">
+
+        <!-- QR canvas -->
+        <div class="d-flex justify-content-center mb-3">
+          <div style="
+            width: 276px; height: 276px;
+            border: 3px solid var(--avanza-light);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(13,31,78,.10);
+          ">
+            <canvas id="qr-canvas" aria-label="Código QR de activación eSIM"></canvas>
+          </div>
+        </div>
+
+        <!-- ICCID -->
+        <div class="mb-3">
+          <span class="form-section-label d-block mb-1">ICCID</span>
+          <code class="iccid-code d-inline-block px-3 py-1" id="qr-iccid-display"
+                style="font-size: 0.88rem; letter-spacing: 0.5px;"></code>
+        </div>
+
+        <!-- Cadena LPA para activación manual -->
+        <div class="mb-3 text-start">
+          <span class="form-section-label d-block mb-1">Cadena de activación manual (LPA)</span>
+          <div style="
+            position: relative;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            overflow: hidden;
+          ">
+            <pre id="qr-lpa-display" class="mb-0 p-2 pe-5"
+                 style="
+                   font-size: 0.72rem;
+                   line-height: 1.5;
+                   word-break: break-all;
+                   white-space: pre-wrap;
+                   color: #212529;
+                   max-height: 72px;
+                   overflow-y: auto;
+                 "></pre>
+            <button type="button"
+                    id="btn-copiar-lpa"
+                    class="btn btn-sm btn-outline-secondary"
+                    title="Copiar cadena LPA"
+                    aria-label="Copiar cadena LPA al portapapeles"
+                    onclick="app.copiarLPA()"
+                    style="
+                      position: absolute; top: 6px; right: 6px;
+                      padding: 0.2rem 0.4rem;
+                      min-height: 28px; min-width: 28px;
+                      line-height: 1;
+                    ">
+              <i class="bi bi-clipboard" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Instrucciones de activación -->
+        <div class="text-start" style="font-size: 0.82rem; color: #495057;">
+          <p class="fw-600 mb-2" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: .06em; color: #6c757d;">
+            Instrucciones de activación
+          </p>
+
+          <div class="d-flex gap-2 mb-2 p-2 rounded" style="background: var(--avanza-light);">
+            <i class="bi bi-apple flex-shrink-0 mt-1" style="color: var(--avanza-dark); font-size: 1rem;" aria-hidden="true"></i>
+            <div>
+              <p class="mb-1 fw-600" style="font-size: 0.8rem;">iOS</p>
+              <p class="mb-0">Ajustes &rarr; Red Móvil &rarr; Añadir Plan de Datos &rarr; Escanea el QR.</p>
+            </div>
+          </div>
+
+          <div class="d-flex gap-2 p-2 rounded" style="background: var(--avanza-light);">
+            <i class="bi bi-android2 flex-shrink-0 mt-1" style="color: #22c55e; font-size: 1rem;" aria-hidden="true"></i>
+            <div>
+              <p class="mb-1 fw-600" style="font-size: 0.8rem;">Android</p>
+              <p class="mb-0">Ajustes &rarr; Conexiones &rarr; Administrador SIM &rarr; Añadir plan &rarr; Escanea el QR.</p>
+            </div>
+          </div>
+
+          <p class="mt-2 mb-0 text-muted" style="font-size: 0.75rem;">
+            Si no puedes escanear, usa la cadena LPA para activación manual.
+          </p>
+        </div>
+
+      </div><!-- /modal-body -->
+
+      <div class="modal-footer d-flex flex-wrap gap-2 justify-content-between">
+        <button type="button" class="btn btn-outline-secondary" onclick="app.prepararCorreo()"
+                title="Abrir cliente de correo con los datos de activación">
+          <i class="bi bi-envelope me-1" aria-hidden="true"></i>Preparar correo
+        </button>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+          <button type="button" class="btn btn-avanza" onclick="app.descargarQR()"
+                  title="Descargar imagen PNG del QR">
+            <i class="bi bi-download me-1" aria-hidden="true"></i>Descargar QR
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
 <!-- Toast -->
 <div class="position-fixed bottom-0 end-0 p-3 toast-container-app">
   <div class="toast" id="app-toast" role="alert" aria-live="assertive" data-bs-delay="3500">
@@ -597,6 +719,7 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" crossorigin="anonymous"></script>
 <!-- config.js se carga en producción con los valores reales; si no existe, los valores por defecto abajo aplican -->
 <script src="config.js" onerror="void 0"></script>
 <script>
@@ -746,8 +869,9 @@ const app = (() => {
     pendienteEliminarId: null,
   };
 
-  let bsModalEsim, bsModalEstado, bsModalConfirmar, bsModalImportar, bsToast;
+  let bsModalEsim, bsModalEstado, bsModalConfirmar, bsModalImportar, bsModalQR, bsToast;
   let _importPendientes = [];
+  let _qrEsimActual = null;
 
   // ── Init ──────────────────────────────────────────────────────
   async function init() {
@@ -763,6 +887,7 @@ const app = (() => {
     bsModalEstado    = new bootstrap.Modal(document.getElementById('modal-estado'));
     bsModalConfirmar = new bootstrap.Modal(document.getElementById('modal-confirmar'));
     bsModalImportar  = new bootstrap.Modal(document.getElementById('modal-importar'));
+    bsModalQR        = new bootstrap.Modal(document.getElementById('modal-qr'));
     bsToast          = new bootstrap.Toast(document.getElementById('app-toast'));
   }
 
@@ -787,6 +912,7 @@ const app = (() => {
       if (action === 'estado')        _abrirModalEstado(id);
       if (action === 'eliminar')      _abrirModalEliminar(id);
       if (action === 'toggle-secret') _toggleSecret(btn);
+      if (action === 'qr')            _abrirModalQR(id);
     });
   }
 
@@ -889,6 +1015,10 @@ const app = (() => {
           <button class="btn btn-outline-secondary btn-action me-1"
                   data-action="estado" data-id="${esc(e.id)}" title="Cambiar estado" aria-label="Cambiar estado">
             <i class="bi bi-toggle-on" aria-hidden="true"></i>
+          </button>
+          <button class="btn btn-outline-info btn-action me-1"
+                  data-action="qr" data-id="${esc(e.id)}" title="Ver QR de activación" aria-label="Ver QR de activación">
+            <i class="bi bi-qr-code" aria-hidden="true"></i>
           </button>
           <button class="btn btn-outline-danger btn-action"
                   data-action="eliminar" data-id="${esc(e.id)}" title="Eliminar" aria-label="Eliminar eSIM">
@@ -1478,6 +1608,99 @@ const app = (() => {
   }
 
 
+  // ════════════════════════════════════════════════════════════
+  // QR DE ACTIVACIÓN
+  // ════════════════════════════════════════════════════════════
+
+  function _abrirModalQR(id) {
+    _qrEsimActual = state.esims.find(e => e.id === id);
+    if (!_qrEsimActual) return;
+
+    const lpa = `LPA:1$${_qrEsimActual.servidor}$${_qrEsimActual.clave}`;
+    document.getElementById('qr-iccid-display').textContent = formatIccid(_qrEsimActual.iccid);
+    document.getElementById('qr-lpa-display').textContent = lpa;
+
+    // Limpiar canvas anterior
+    const canvas = document.getElementById('qr-canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    bsModalQR.show();
+
+    // Generar QR una vez que el modal es visible (requiere DOM visible)
+    document.getElementById('modal-qr').addEventListener('shown.bs.modal', async function handler() {
+      this.removeEventListener('shown.bs.modal', handler);
+      try {
+        await QRCode.toCanvas(canvas, lpa, {
+          width: 260,
+          margin: 2,
+          color: { dark: '#0d1f4e', light: '#ffffff' },
+        });
+      } catch (err) {
+        _toast('Error al generar el QR.', 'danger');
+        console.error(err);
+      }
+    });
+  }
+
+  async function copiarLPA() {
+    const lpaEl = document.getElementById('qr-lpa-display');
+    const texto = lpaEl.textContent.trim();
+    if (!texto) return;
+    try {
+      await navigator.clipboard.writeText(texto);
+      const btn = document.getElementById('btn-copiar-lpa');
+      const icon = btn.querySelector('i');
+      icon.className = 'bi bi-clipboard-check';
+      btn.classList.add('btn-success');
+      btn.classList.remove('btn-outline-secondary');
+      setTimeout(() => {
+        icon.className = 'bi bi-clipboard';
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-outline-secondary');
+      }, 2000);
+    } catch {
+      _toast('No se pudo copiar al portapapeles.', 'danger');
+    }
+  }
+
+  async function descargarQR() {
+    if (!_qrEsimActual) return;
+    const canvas = document.getElementById('qr-canvas');
+    const url = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `qr-esim-${_qrEsimActual.iccid}.png`;
+    a.click();
+  }
+
+  function prepararCorreo() {
+    if (!_qrEsimActual) return;
+    const e = _qrEsimActual;
+    const asunto = encodeURIComponent(
+      `Tu eSIM AVANZA FIBRA está lista — Nº ${e.iccid}`
+    );
+    const cuerpo = encodeURIComponent(
+      `Hola,\n\n` +
+      `Tu tarjeta eSIM de AVANZA FIBRA ya está lista para activar.\n\n` +
+      `Número de serie (ICCID): ${e.iccid}\n\n` +
+      `CÓMO ACTIVARLA\n` +
+      `──────────────\n` +
+      `• iPhone / iPad:\n` +
+      `  Ajustes → Datos móviles → Añadir plan de datos → Escanear código QR\n\n` +
+      `• Android:\n` +
+      `  Ajustes → Red e Internet → SIMs → Añadir SIM → Escanear código QR\n\n` +
+      `Encontrarás el código QR adjunto a este correo.\n` +
+      `Si no puedes escanear el QR, usa este código de activación manual:\n` +
+      `LPA:1$${e.servidor}$${e.clave}\n\n` +
+      `Para cualquier consulta, contacta con nuestro soporte técnico.\n\n` +
+      `Un saludo,\n` +
+      `Equipo AVANZA FIBRA`
+    );
+    window.open(`mailto:${e.email ? esc(e.email) : ''}?subject=${asunto}&body=${cuerpo}`);
+  }
+
+
   // ── Helpers UI ────────────────────────────────────────────────
   function _mostrarCargando(show) {
     document.getElementById('loading-overlay').classList.toggle('d-none', !show);
@@ -1498,6 +1721,7 @@ const app = (() => {
     init,
     abrirModalAlta, guardarEsim, confirmarCambioEstado, confirmarEliminar, limpiarFiltros,
     abrirModalImportar, analizarCSV, agregarManual, quitarManual, confirmarImportar,
+    descargarQR, copiarLPA, prepararCorreo,
   };
 
 })();
