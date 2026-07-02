@@ -11,369 +11,279 @@
   <![endif]-->
   <title>Tu eSIM AVANZA FIBRA está lista</title>
   <style type="text/css">
-    /* Reset básico para clientes web */
-    body, table, td, p, a, li, blockquote { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
-    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
-    img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
-    body { margin: 0; padding: 0; background-color: #f0f4f8; }
-    /* Vínculo — evita que clientes de email coloreen el ICCID como teléfono */
-    a[x-apple-data-detectors] { color: inherit !important; text-decoration: none !important; }
-    /* Dark mode override mínimo */
-    @media (prefers-color-scheme: dark) {
-      .email-body    { background-color: #1a1a2e !important; }
-      .content-wrap  { background-color: #16213e !important; }
-    }
-    /* Responsive */
-    @media only screen and (max-width: 620px) {
-      .container     { width: 100% !important; }
-      .content-pad   { padding: 24px 16px !important; }
-      .step-row td   { display: block; width: 100% !important; }
-      .step-num      { margin-bottom: 4px; }
-      .footer-pad    { padding: 20px 16px !important; }
+    body, table, td, p, a, li { -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; }
+    table, td { mso-table-lspace:0pt; mso-table-rspace:0pt; }
+    img { -ms-interpolation-mode:bicubic; border:0; outline:none; text-decoration:none; }
+    body { margin:0; padding:0; background-color:#f4f6f8; }
+    a[x-apple-data-detectors] { color:inherit !important; text-decoration:none !important; }
+    @media only screen and (max-width:660px) {
+      .container  { width:100% !important; }
+      .body-pad   { padding:24px 20px !important; }
+      .footer-pad { padding:16px 8px 0 8px !important; }
+      .step-row td { display:block; width:100% !important; }
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background-color:#f0f4f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;">
+<body style="margin:0;padding:0;background-color:#f4f6f8;">
 
-  <!-- Preheader (oculto, aparece en vista previa del email) -->
-  <div style="display:none;font-size:1px;color:#f0f4f8;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">
+  <!-- Preheader oculto -->
+  <div style="display:none;font-size:1px;color:#f4f6f8;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">
     Tu eSIM AVANZA FIBRA ya está lista para activar. Sigue las instrucciones para empezar.
   </div>
 
-  <!-- Wrapper exterior -->
-  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"
-         style="background-color:#f0f4f8;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0"
+         style="margin:0;padding:0;background-color:#f4f6f8;">
     <tr>
       <td align="center" style="padding:32px 16px;">
 
-        <!-- Contenedor principal 600px -->
-        <table role="presentation" class="container" cellspacing="0" cellpadding="0" border="0"
-               width="600" style="background-color:#ffffff;border-radius:8px;overflow:hidden;
-               box-shadow:0 2px 12px rgba(0,0,0,0.10);">
+        <!-- ═══════════════════════════════════════════
+             CONTENEDOR PRINCIPAL
+             ═══════════════════════════════════════════ -->
+        <table class="container" width="640" cellpadding="0" cellspacing="0" border="0"
+               style="max-width:640px;background-color:#ffffff;border-radius:12px;
+                      overflow:hidden;border:1px solid #e5e7eb;
+                      font-family:Verdana,Arial,Helvetica,sans-serif;">
 
-          <!-- ══════════════════════════════════════
-               CABECERA
-               ══════════════════════════════════════ -->
+          <!-- Logo -->
           <tr>
-            <td style="background-color:#0d1f4e;padding:28px 32px;text-align:center;">
-              <!-- Logotipo textual — se sustituirá por <img> cuando haya recurso corporativo -->
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                <tr>
-                  <td align="center">
-                    <p style="margin:0;font-size:22px;font-weight:700;color:#ffffff;
-                               letter-spacing:1px;line-height:1.2;">
-                      AVANZA FIBRA
-                    </p>
-                    <p style="margin:6px 0 0;font-size:11px;font-weight:400;color:#8aaacf;
-                               letter-spacing:3px;text-transform:uppercase;">
-                      Avanza Solutions
-                    </p>
-                  </td>
-                </tr>
-              </table>
+            <td align="center" style="padding:10px 30px;">
+              <img src="https://static.avanzafibra.net/png/logo_400px.png"
+                   alt="Avanza Fibra" width="400"
+                   style="display:block;border:0;outline:none;text-decoration:none;
+                          max-width:100%;height:auto;">
             </td>
           </tr>
 
-          <!-- Banner de confirmación -->
-          <tr>
-            <td style="background-color:#2456b5;padding:14px 32px;text-align:center;">
-              <p style="margin:0;font-size:14px;font-weight:600;color:#ffffff;letter-spacing:0.3px;">
-                &#10003;&nbsp; Tu eSIM está lista para activar
-              </p>
-            </td>
-          </tr>
-
-          <!-- ══════════════════════════════════════
-               CUERPO PRINCIPAL
-               ══════════════════════════════════════ -->
-          <tr>
-            <td class="content-pad" style="padding:32px 32px 24px;">
-
-              <!-- Saludo -->
-              <p style="margin:0 0 20px;font-size:16px;color:#212529;line-height:1.5;">
-                Hola, <strong>{{NOMBRE}}</strong>:
-              </p>
-
-              <p style="margin:0 0 16px;font-size:15px;color:#495057;line-height:1.6;">
-                Tu tarjeta eSIM de <strong style="color:#0d1f4e;">AVANZA FIBRA</strong>
-                ya está lista para activar en tu dispositivo. Solo tienes que
-                escanear el código QR adjunto o seguir los pasos que encontrarás
-                a continuación.
-              </p>
-
-              <!-- ── Caja de datos de la eSIM ── -->
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"
-                     style="background-color:#eef4fb;border-radius:6px;border:1px solid #c8dcf2;
-                            margin-bottom:28px;">
-                <tr>
-                  <td style="padding:20px 24px;">
-                    <p style="margin:0 0 6px;font-size:10px;font-weight:600;color:#6c757d;
-                               text-transform:uppercase;letter-spacing:0.7px;">
-                      Tus datos eSIM
-                    </p>
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0">
-                      <tr>
-                        <td style="padding:4px 0;font-size:13px;color:#495057;
-                                   font-weight:500;white-space:nowrap;padding-right:12px;">
-                          Número de serie (ICCID)
-                        </td>
-                        <td style="padding:4px 0;font-size:13px;color:#0d1f4e;font-weight:700;
-                                   font-family:'Courier New',Courier,monospace;letter-spacing:0.5px;">
-                          {{ICCID}}
-                        </td>
-                      </tr>
-                    </table>
-                    <p style="margin:12px 0 0;font-size:12px;color:#6c757d;line-height:1.4;">
-                      Escanea el c&#243;digo QR que aparece a continuaci&#243;n para activar tu eSIM.
-                    </p>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- ── QR de activación ── -->
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"
-                     style="margin-bottom:28px;">
-                <tr>
-                  <td style="text-align:center;padding:24px 16px;background-color:#f8fbff;
-                             border-radius:6px;border:1px solid #c8dcf2;">
-                    <p style="margin:0 0 16px;font-size:10px;font-weight:600;color:#6c757d;
-                               text-transform:uppercase;letter-spacing:0.7px;">
-                      C&#243;digo QR de activaci&#243;n
-                    </p>
-                    {{QR_IMAGE}}
-                    <p style="margin:14px 0 0;font-size:11px;color:#6c757d;line-height:1.5;">
-                      Escanea este c&#243;digo desde tu dispositivo.<br>
-                      Si no puedes escanearlo, usa la cadena de activaci&#243;n manual<br>
-                      disponible en el portal de gesti&#243;n.
-                    </p>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- ── Título instrucciones ── -->
-              <p style="margin:0 0 16px;font-size:15px;font-weight:700;color:#0d1f4e;">
-                &#128241;&nbsp; C&#243;mo activar tu eSIM paso a paso
-              </p>
-
-              <!-- ══ iOS ══ -->
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"
-                     style="margin-bottom:20px;">
-                <tr>
-                  <td style="border:1px solid #dee2e6;border-radius:6px;overflow:hidden;">
-
-                    <!-- Cabecera iOS -->
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                      <tr>
-                        <td style="background-color:#f8f9fa;padding:10px 16px;
-                                   border-bottom:1px solid #dee2e6;">
-                          <p style="margin:0;font-size:13px;font-weight:700;color:#0d1f4e;">
-                            iPhone / iPad (iOS)
-                          </p>
-                        </td>
-                      </tr>
-                    </table>
-
-                    <!-- Pasos iOS -->
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-
-                      <tr class="step-row">
-                        <td class="step-num" width="36"
-                            style="padding:10px 0 6px 16px;vertical-align:top;">
-                          <span style="display:inline-block;width:22px;height:22px;
-                                       background-color:#0d1f4e;color:#ffffff;border-radius:50%;
-                                       font-size:11px;font-weight:700;text-align:center;
-                                       line-height:22px;">1</span>
-                        </td>
-                        <td style="padding:10px 16px 6px 8px;font-size:13px;color:#495057;line-height:1.5;vertical-align:top;">
-                          Abre <strong>Ajustes</strong> en tu iPhone o iPad.
-                        </td>
-                      </tr>
-
-                      <tr class="step-row">
-                        <td class="step-num" width="36"
-                            style="padding:4px 0 6px 16px;vertical-align:top;">
-                          <span style="display:inline-block;width:22px;height:22px;
-                                       background-color:#0d1f4e;color:#ffffff;border-radius:50%;
-                                       font-size:11px;font-weight:700;text-align:center;
-                                       line-height:22px;">2</span>
-                        </td>
-                        <td style="padding:4px 16px 6px 8px;font-size:13px;color:#495057;line-height:1.5;vertical-align:top;">
-                          Ve a <strong>Datos m&#243;viles</strong> (o <strong>Red m&#243;vil</strong> en algunos modelos).
-                        </td>
-                      </tr>
-
-                      <tr class="step-row">
-                        <td class="step-num" width="36"
-                            style="padding:4px 0 6px 16px;vertical-align:top;">
-                          <span style="display:inline-block;width:22px;height:22px;
-                                       background-color:#0d1f4e;color:#ffffff;border-radius:50%;
-                                       font-size:11px;font-weight:700;text-align:center;
-                                       line-height:22px;">3</span>
-                        </td>
-                        <td style="padding:4px 16px 6px 8px;font-size:13px;color:#495057;line-height:1.5;vertical-align:top;">
-                          Pulsa <strong>A&#241;adir plan de datos</strong>.
-                        </td>
-                      </tr>
-
-                      <tr class="step-row">
-                        <td class="step-num" width="36"
-                            style="padding:4px 0 14px 16px;vertical-align:top;">
-                          <span style="display:inline-block;width:22px;height:22px;
-                                       background-color:#0d1f4e;color:#ffffff;border-radius:50%;
-                                       font-size:11px;font-weight:700;text-align:center;
-                                       line-height:22px;">4</span>
-                        </td>
-                        <td style="padding:4px 16px 14px 8px;font-size:13px;color:#495057;line-height:1.5;vertical-align:top;">
-                          Selecciona <strong>Usar c&#243;digo QR</strong> y escanea la imagen adjunta.
-                        </td>
-                      </tr>
-
-                    </table>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- ══ Android ══ -->
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"
-                     style="margin-bottom:28px;">
-                <tr>
-                  <td style="border:1px solid #dee2e6;border-radius:6px;overflow:hidden;">
-
-                    <!-- Cabecera Android -->
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                      <tr>
-                        <td style="background-color:#f8f9fa;padding:10px 16px;
-                                   border-bottom:1px solid #dee2e6;">
-                          <p style="margin:0;font-size:13px;font-weight:700;color:#166534;">
-                            Android
-                          </p>
-                        </td>
-                      </tr>
-                    </table>
-
-                    <!-- Pasos Android -->
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-
-                      <tr class="step-row">
-                        <td class="step-num" width="36"
-                            style="padding:10px 0 6px 16px;vertical-align:top;">
-                          <span style="display:inline-block;width:22px;height:22px;
-                                       background-color:#166534;color:#ffffff;border-radius:50%;
-                                       font-size:11px;font-weight:700;text-align:center;
-                                       line-height:22px;">1</span>
-                        </td>
-                        <td style="padding:10px 16px 6px 8px;font-size:13px;color:#495057;line-height:1.5;vertical-align:top;">
-                          Abre <strong>Ajustes</strong> en tu dispositivo Android.
-                        </td>
-                      </tr>
-
-                      <tr class="step-row">
-                        <td class="step-num" width="36"
-                            style="padding:4px 0 6px 16px;vertical-align:top;">
-                          <span style="display:inline-block;width:22px;height:22px;
-                                       background-color:#166534;color:#ffffff;border-radius:50%;
-                                       font-size:11px;font-weight:700;text-align:center;
-                                       line-height:22px;">2</span>
-                        </td>
-                        <td style="padding:4px 16px 6px 8px;font-size:13px;color:#495057;line-height:1.5;vertical-align:top;">
-                          Ve a <strong>Red e Internet</strong> &#8594; <strong>SIMs</strong>
-                          (en algunos modelos puede llamarse <em>Conexiones</em> &#8594; <em>Administrador de SIM</em>).
-                        </td>
-                      </tr>
-
-                      <tr class="step-row">
-                        <td class="step-num" width="36"
-                            style="padding:4px 0 6px 16px;vertical-align:top;">
-                          <span style="display:inline-block;width:22px;height:22px;
-                                       background-color:#166534;color:#ffffff;border-radius:50%;
-                                       font-size:11px;font-weight:700;text-align:center;
-                                       line-height:22px;">3</span>
-                        </td>
-                        <td style="padding:4px 16px 6px 8px;font-size:13px;color:#495057;line-height:1.5;vertical-align:top;">
-                          Pulsa <strong>A&#241;adir SIM</strong> o el bot&#243;n <strong>+</strong>.
-                        </td>
-                      </tr>
-
-                      <tr class="step-row">
-                        <td class="step-num" width="36"
-                            style="padding:4px 0 14px 16px;vertical-align:top;">
-                          <span style="display:inline-block;width:22px;height:22px;
-                                       background-color:#166534;color:#ffffff;border-radius:50%;
-                                       font-size:11px;font-weight:700;text-align:center;
-                                       line-height:22px;">4</span>
-                        </td>
-                        <td style="padding:4px 16px 14px 8px;font-size:13px;color:#495057;line-height:1.5;vertical-align:top;">
-                          Elige <strong>Escanear c&#243;digo QR</strong> y apunta la c&#225;mara a la imagen adjunta.
-                        </td>
-                      </tr>
-
-                    </table>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- ── Nota de soporte ── -->
-              <p style="margin:0;font-size:13px;color:#6c757d;line-height:1.6;">
-                ¿Necesitas ayuda? Nuestro equipo de soporte est&#225; disponible en
-                <a href="mailto:soporte@avanzasolutions.es"
-                   style="color:#2456b5;font-weight:600;text-decoration:none;">
-                  soporte@avanzasolutions.es
-                </a>
-                o llamando al <strong>900 00 00 00</strong> (lunes a viernes, 9&#8239;h&#8239;–&#8239;19&#8239;h).
-              </p>
-
-            </td>
-          </tr>
-
-          <!-- ══════════════════════════════════════
-               SEPARADOR
-               ══════════════════════════════════════ -->
+          <!-- Separador -->
           <tr>
             <td style="padding:0 32px;">
-              <hr style="border:none;border-top:1px solid #dee2e6;margin:0;">
+              <div style="height:1px;background-color:#e5e7eb;line-height:1px;font-size:1px;">&nbsp;</div>
             </td>
           </tr>
 
-          <!-- ══════════════════════════════════════
-               PIE DE PÁGINA
-               ══════════════════════════════════════ -->
+          <!-- ── Cuerpo ── -->
           <tr>
-            <td class="footer-pad" style="padding:24px 32px;text-align:center;">
+            <td class="body-pad" style="padding:28px 32px 12px 32px;color:#1f2937;
+                                        font-size:14px;line-height:1.65;">
 
-              <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#0d1f4e;">
-                AVANZA FIBRA &mdash; Avanza Solutions
+              <!-- Saludo -->
+              <p style="margin:0 0 18px 0;">
+                Estimado/a <strong>{{NOMBRE}}</strong>,
               </p>
 
-              <p style="margin:0 0 12px;font-size:12px;color:#6c757d;line-height:1.6;">
-                C/ Ejemplo, 1 &nbsp;|&nbsp; 00000 Ciudad &nbsp;|&nbsp; España
+              <p style="margin:0 0 22px 0;">
+                Su tarjeta eSIM de <strong>AVANZA FIBRA</strong> ya está lista para activar
+                en su dispositivo. A continuación encontrará su número de serie y el código
+                QR de activación.
               </p>
 
-              <p style="margin:0 0 12px;font-size:12px;color:#6c757d;line-height:1.6;">
-                <a href="mailto:soporte@avanzasolutions.es"
-                   style="color:#2456b5;text-decoration:none;">soporte@avanzasolutions.es</a>
-                &nbsp;&nbsp;|&nbsp;&nbsp;
-                <a href="https://www.avanzasolutions.es"
-                   style="color:#2456b5;text-decoration:none;">www.avanzasolutions.es</a>
+              <!-- Caja datos eSIM -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                     style="background-color:#f5f9fc;border:1px solid #d8e8f3;
+                            border-radius:8px;margin:0 0 22px 0;">
+                <tr>
+                  <td style="padding:16px 18px;color:#374151;font-size:13px;line-height:1.8;">
+                    <p style="margin:0 0 4px 0;font-size:10px;font-weight:bold;
+                               color:#6b7280;text-transform:uppercase;letter-spacing:0.7px;">
+                      Datos de su eSIM
+                    </p>
+                    <p style="margin:0;">
+                      <strong>N&uacute;mero de serie (ICCID):</strong>
+                      <span style="font-family:'Courier New',Courier,monospace;
+                                   letter-spacing:0.5px;color:#046CA9;">{{ICCID}}</span>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- QR de activación -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                     style="background-color:#f5f9fc;border:1px solid #d8e8f3;
+                            border-radius:8px;margin:0 0 22px 0;">
+                <tr>
+                  <td style="padding:20px 18px;text-align:center;">
+                    <p style="margin:0 0 14px 0;font-size:10px;font-weight:bold;
+                               color:#6b7280;text-transform:uppercase;letter-spacing:0.7px;">
+                      C&oacute;digo QR de activaci&oacute;n
+                    </p>
+                    {{QR_IMAGE}}
+                    <p style="margin:14px 0 0 0;font-size:12px;color:#6b7280;line-height:1.5;">
+                      Escanee este c&oacute;digo desde su dispositivo para activar la eSIM.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Aviso importante -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                     style="background-color:#fff7ed;border:1px solid #fed7aa;
+                            border-radius:8px;margin:0 0 22px 0;">
+                <tr>
+                  <td style="padding:16px 18px;color:#7c2d12;font-size:13px;line-height:1.6;">
+                    <p style="margin:0;">
+                      <strong>Importante:</strong> Este c&oacute;digo QR es de un solo uso y
+                      est&aacute; vinculado exclusivamente a su l&iacute;nea. No lo comparta
+                      con terceros.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Instrucciones iOS -->
+              <p style="margin:0 0 12px 0;font-size:13px;font-weight:bold;color:#046CA9;">
+                C&oacute;mo activar su eSIM
               </p>
 
-              <p style="margin:0;font-size:11px;color:#adb5bd;line-height:1.5;">
-                Este mensaje contiene informaci&#243;n confidencial destinada exclusivamente al
-                destinatario indicado. Si lo ha recibido por error, le rogamos que lo elimine
-                y nos lo comunique.
-              </p>
+              <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                     style="border:1px solid #e5e7eb;border-radius:8px;
+                            overflow:hidden;margin:0 0 16px 0;">
+                <tr>
+                  <td style="background-color:#f5f9fc;padding:10px 16px;
+                             border-bottom:1px solid #e5e7eb;">
+                    <p style="margin:0;font-size:13px;font-weight:bold;color:#1f2937;">
+                      iPhone / iPad (iOS)
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 16px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr class="step-row">
+                        <td width="30" style="vertical-align:top;padding-top:1px;">
+                          <span style="display:inline-block;width:20px;height:20px;
+                                       background-color:#046CA9;color:#ffffff;border-radius:50%;
+                                       font-size:11px;font-weight:bold;text-align:center;
+                                       line-height:20px;">1</span>
+                        </td>
+                        <td style="font-size:13px;color:#374151;line-height:1.6;padding-bottom:6px;">
+                          Abra <strong>Ajustes</strong> en su iPhone o iPad.
+                        </td>
+                      </tr>
+                      <tr class="step-row">
+                        <td width="30" style="vertical-align:top;padding-top:1px;">
+                          <span style="display:inline-block;width:20px;height:20px;
+                                       background-color:#046CA9;color:#ffffff;border-radius:50%;
+                                       font-size:11px;font-weight:bold;text-align:center;
+                                       line-height:20px;">2</span>
+                        </td>
+                        <td style="font-size:13px;color:#374151;line-height:1.6;padding-bottom:6px;">
+                          Vaya a <strong>Datos m&oacute;viles</strong> &rarr; <strong>A&ntilde;adir plan de datos</strong>.
+                        </td>
+                      </tr>
+                      <tr class="step-row">
+                        <td width="30" style="vertical-align:top;padding-top:1px;">
+                          <span style="display:inline-block;width:20px;height:20px;
+                                       background-color:#046CA9;color:#ffffff;border-radius:50%;
+                                       font-size:11px;font-weight:bold;text-align:center;
+                                       line-height:20px;">3</span>
+                        </td>
+                        <td style="font-size:13px;color:#374151;line-height:1.6;">
+                          Seleccione <strong>Usar c&oacute;digo QR</strong> y esc&aacute;nee la imagen adjunta.
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
 
-              <p style="margin:12px 0 0;font-size:11px;color:#adb5bd;">
-                &copy; 2026 Avanza Solutions, S.L. Todos los derechos reservados.
+              <!-- Instrucciones Android -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                     style="border:1px solid #e5e7eb;border-radius:8px;
+                            overflow:hidden;margin:0 0 24px 0;">
+                <tr>
+                  <td style="background-color:#f5f9fc;padding:10px 16px;
+                             border-bottom:1px solid #e5e7eb;">
+                    <p style="margin:0;font-size:13px;font-weight:bold;color:#1f2937;">
+                      Android
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 16px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr class="step-row">
+                        <td width="30" style="vertical-align:top;padding-top:1px;">
+                          <span style="display:inline-block;width:20px;height:20px;
+                                       background-color:#046CA9;color:#ffffff;border-radius:50%;
+                                       font-size:11px;font-weight:bold;text-align:center;
+                                       line-height:20px;">1</span>
+                        </td>
+                        <td style="font-size:13px;color:#374151;line-height:1.6;padding-bottom:6px;">
+                          Abra <strong>Ajustes</strong> &rarr; <strong>Red e Internet</strong> &rarr; <strong>SIMs</strong>.
+                        </td>
+                      </tr>
+                      <tr class="step-row">
+                        <td width="30" style="vertical-align:top;padding-top:1px;">
+                          <span style="display:inline-block;width:20px;height:20px;
+                                       background-color:#046CA9;color:#ffffff;border-radius:50%;
+                                       font-size:11px;font-weight:bold;text-align:center;
+                                       line-height:20px;">2</span>
+                        </td>
+                        <td style="font-size:13px;color:#374151;line-height:1.6;padding-bottom:6px;">
+                          Pulse <strong>A&ntilde;adir SIM</strong> o el bot&oacute;n <strong>+</strong>.
+                        </td>
+                      </tr>
+                      <tr class="step-row">
+                        <td width="30" style="vertical-align:top;padding-top:1px;">
+                          <span style="display:inline-block;width:20px;height:20px;
+                                       background-color:#046CA9;color:#ffffff;border-radius:50%;
+                                       font-size:11px;font-weight:bold;text-align:center;
+                                       line-height:20px;">3</span>
+                        </td>
+                        <td style="font-size:13px;color:#374151;line-height:1.6;">
+                          Elija <strong>Escanear c&oacute;digo QR</strong> y apunte la c&aacute;mara a la imagen adjunta.
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0 0 6px 0;">
+                Sin otro particular, reciba un cordial saludo.
+              </p>
+              <p style="margin:0 0 0 0;">
+                <strong>El equipo de Avanza Fibra</strong>
               </p>
 
             </td>
           </tr>
 
-        </table><!-- /contenedor 600px -->
+          <!-- Barra inferior corporativa -->
+          <tr>
+            <td style="padding:20px 32px 30px 32px;">
+              <div style="height:4px;background-color:#046CA9;border-radius:4px;
+                          line-height:4px;font-size:4px;">&nbsp;</div>
+            </td>
+          </tr>
+
+        </table><!-- /contenedor -->
+
+        <!-- ── Pie de página ── -->
+        <table class="container" width="640" cellpadding="0" cellspacing="0" border="0"
+               style="max-width:640px;font-family:Verdana,Arial,Helvetica,sans-serif;">
+          <tr>
+            <td class="footer-pad" style="padding:18px 8px 0 8px;color:#6b7280;
+                                          font-size:11px;line-height:1.45;">
+              <p style="margin:0;">
+                AVANZA NETWORK TELECOM S.L. &middot; CIF: B30919856 &middot; C/Uruguay, 19/11 &middot; 30169 San Gin&eacute;s (Murcia)<br>
+                Este mensaje y sus archivos adjuntos son confidenciales y est&aacute;n dirigidos exclusivamente a su destinatario.
+                Si lo ha recibido por error, le rogamos que lo comunique al remitente y lo elimine, absteni&eacute;ndose de
+                utilizarlo, copiarlo o divulgarlo.<br>
+                Sus datos personales podr&aacute;n ser tratados por AVANZA FIBRA para gestionar la relaci&oacute;n mantenida
+                con usted. Puede ejercer sus derechos de acceso, rectificaci&oacute;n, supresi&oacute;n, oposici&oacute;n,
+                limitaci&oacute;n, portabilidad y revocaci&oacute;n del consentimiento mediante escrito dirigido a la
+                direcci&oacute;n postal indicada o al correo electr&oacute;nico
+                <a href="mailto:protecciondedatos@avanzafibra.com"
+                   style="color:#6b7280;">protecciondedatos@avanzafibra.com</a>
+              </p>
+            </td>
+          </tr>
+        </table>
 
       </td>
     </tr>
-  </table><!-- /wrapper exterior -->
+  </table>
 
 </body>
 </html>

@@ -1,6 +1,12 @@
 # Credenciales y configuración local — NUNCA subir al repositorio
 config.js
 
+# Dependencias Node
+node_modules/
+
+# Plantillas de referencia (no van al repo)
+plantilla_email.html
+
 # Artefactos del sistema operativo
 .DS_Store
 Thumbs.db
