@@ -32,7 +32,7 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json({ limit: '5mb' }));
-app.use(express.static(__dirname));
+app.use(express.static(__dirname, { index: 'esims.html' }));
 
 // POST /api/send-email
 // Body: { to: string, iccid: string, qrBase64: string }
