@@ -1,11 +1,29 @@
-const express = require('express');
-const path    = require('path');
-const fs      = require('fs');
+const express  = require('express');
+const path     = require('path');
+const fs       = require('fs');
+const https    = require('https');
 const { Resend } = require('resend');
 
 const app    = express();
 const resend = new Resend(process.env.RESEND_API_KEY);
 const PORT   = process.env.PORT || 3000;
+
+const LOGO_URL = 'https://static.avanzafibra.net/png/logo_400px.png';
+let   logoBase64 = null;
+
+function fetchLogo() {
+  return new Promise((resolve) => {
+    https.get(LOGO_URL, (res) => {
+      const chunks = [];
+      res.on('data', c => chunks.push(c));
+      res.on('end', () => {
+        logoBase64 = Buffer.concat(chunks).toString('base64');
+        resolve();
+      });
+    }).on('error', () => resolve()); // fallo silencioso — el logo simplemente no aparece
+  });
+}
+fetchLogo();
 
 // Security headers (mirrors previous nginx.conf)
 app.use((req, res, next) => {
@@ -49,10 +67,14 @@ app.post('/api/send-email', async (req, res) => {
     const qrImg = `<img src="data:image/png;base64,${qrBase64}" width="200" height="200"
       alt="Código QR de activación"
       style="display:block;margin:0 auto;border:0;outline:none;">`;
+    const logoSrc = logoBase64
+      ? `data:image/png;base64,${logoBase64}`
+      : LOGO_URL;
     htmlBody = tpl
       .replace(/\{\{NOMBRE\}\}/g,   nombre || 'Cliente')
       .replace(/\{\{ICCID\}\}/g,    iccid)
-      .replace(/\{\{QR_IMAGE\}\}/g, qrImg);
+      .replace(/\{\{QR_IMAGE\}\}/g, qrImg)
+      .replace(LOGO_URL, logoSrc);
   } catch {
     return res.status(500).json({ error: 'No se pudo cargar la plantilla de correo.' });
   }
