@@ -46,7 +46,7 @@ app.post('/api/send-email', async (req, res) => {
   let htmlBody;
   try {
     const tpl = fs.readFileSync(path.join(__dirname, 'email-activacion.html'), 'utf8');
-    const qrImg = `<img src="cid:qr-activacion.png" width="200" height="200"
+    const qrImg = `<img src="data:image/png;base64,${qrBase64}" width="200" height="200"
       alt="Código QR de activación"
       style="display:block;margin:0 auto;border:0;outline:none;">`;
     htmlBody = tpl
@@ -63,11 +63,6 @@ app.post('/api/send-email', async (req, res) => {
       to:      [to],
       subject: `Tu eSIM AVANZA FIBRA está lista — Nº ${iccid}`,
       html:    htmlBody,
-      attachments: [{
-        filename:   'qr-activacion.png',
-        content:    Buffer.from(qrBase64, 'base64'),
-        content_id: 'qr-activacion.png',
-      }],
     });
 
     if (error) return res.status(500).json({ error: error.message });
