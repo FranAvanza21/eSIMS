@@ -1674,30 +1674,90 @@ const app = (() => {
     a.click();
   }
 
-  function prepararCorreo() {
+  async function prepararCorreo() {
     if (!_qrEsimActual) return;
     const e = _qrEsimActual;
-    const asunto = encodeURIComponent(
-      `Tu eSIM AVANZA FIBRA está lista — Nº ${e.iccid}`
-    );
-    const cuerpo = encodeURIComponent(
-      `Hola,\n\n` +
-      `Tu tarjeta eSIM de AVANZA FIBRA ya está lista para activar.\n\n` +
-      `Número de serie (ICCID): ${e.iccid}\n\n` +
-      `CÓMO ACTIVARLA\n` +
-      `──────────────\n` +
-      `• iPhone / iPad:\n` +
-      `  Ajustes → Datos móviles → Añadir plan de datos → Escanear código QR\n\n` +
-      `• Android:\n` +
-      `  Ajustes → Red e Internet → SIMs → Añadir SIM → Escanear código QR\n\n` +
-      `Encontrarás el código QR adjunto a este correo.\n` +
-      `Si no puedes escanear el QR, usa este código de activación manual:\n` +
-      `LPA:1$${e.servidor}$${e.clave}\n\n` +
-      `Para cualquier consulta, contacta con nuestro soporte técnico.\n\n` +
-      `Un saludo,\n` +
-      `Equipo AVANZA FIBRA`
-    );
-    window.open(`mailto:${e.email ? esc(e.email) : ''}?subject=${asunto}&body=${cuerpo}`);
+
+    // 1 — QR como base64 PNG (el canvas ya está pintado en el modal)
+    const canvas = document.getElementById('qr-canvas');
+    const qrBase64 = canvas.toDataURL('image/png').split(',')[1];
+    if (!qrBase64) { _toast('Abre primero el QR para generarlo.', 'danger'); return; }
+
+    // 2 — Cargar plantilla de correo y sustituir variables
+    let htmlBody;
+    try {
+      const resp = await fetch('email-activacion.html');
+      if (!resp.ok) throw new Error('template no disponible');
+      const tpl = await resp.text();
+      const qrImgTag = `<img src="cid:qr-activacion.png" width="200" height="200"
+        alt="Código QR de activación"
+        style="display:block;margin:0 auto;border:0;outline:none;">`;
+      htmlBody = tpl
+        .replace(/\{\{NOMBRE\}\}/g,  'Cliente')
+        .replace(/\{\{ICCID\}\}/g,   formatIccid(e.iccid))
+        .replace(/\{\{QR_IMAGE\}\}/g, qrImgTag);
+    } catch {
+      _toast('No se pudo cargar la plantilla de correo.', 'danger');
+      return;
+    }
+
+    // 3 — Codificar HTML en base64 (UTF-8 seguro)
+    const htmlB64 = _strToBase64(htmlBody);
+
+    // 4 — Asunto codificado RFC 2047
+    const asunto   = `Tu eSIM AVANZA FIBRA está lista — Nº ${e.iccid}`;
+    const asuntoB64 = `=?UTF-8?B?${_strToBase64(asunto)}?=`;
+
+    // 5 — Construir MIME multipart/related
+    const bound = `avanza_${Date.now()}`;
+    const eml = [
+      'MIME-Version: 1.0',
+      `To: ${e.email || ''}`,
+      'From: AVANZA FIBRA <noreply@avanzasolutions.es>',
+      `Subject: ${asuntoB64}`,
+      `Content-Type: multipart/related; type="text/html"; boundary="${bound}"`,
+      '',
+      `--${bound}`,
+      'Content-Type: text/html; charset=UTF-8',
+      'Content-Transfer-Encoding: base64',
+      '',
+      _wrapBase64(htmlB64),
+      '',
+      `--${bound}`,
+      'Content-Type: image/png',
+      'Content-Transfer-Encoding: base64',
+      'Content-ID: <qr-activacion.png>',
+      'Content-Disposition: inline; filename="qr-activacion.png"',
+      '',
+      _wrapBase64(qrBase64),
+      '',
+      `--${bound}--`,
+    ].join('\r\n');
+
+    // 6 — Descargar como .eml
+    const blob = new Blob([eml], { type: 'message/rfc822' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `activacion-esim-${e.iccid}.eml`;
+    a.click();
+    URL.revokeObjectURL(url);
+    _toast('Correo generado. Ábrelo con tu cliente de email.', 'success');
+
+    // ── helpers de codificación ─────────────────────────────────
+    function _strToBase64(str) {
+      const bytes = new TextEncoder().encode(str);
+      let bin = '';
+      const chunk = 8192;
+      for (let i = 0; i < bytes.length; i += chunk) {
+        bin += String.fromCharCode(...bytes.subarray(i, i + chunk));
+      }
+      return btoa(bin);
+    }
+    function _wrapBase64(b64) {
+      return b64.match(/.{1,76}/g).join('\r\n');
+    }
+    // ── FIN helpers ─────────────────────────────────────────────
   }
 
 
