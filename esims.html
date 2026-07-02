@@ -599,7 +599,7 @@
 
       <div class="modal-body text-center px-4 py-4">
 
-        <!-- QR canvas -->
+        <!-- QR container -->
         <div class="d-flex justify-content-center mb-3">
           <div style="
             width: 276px; height: 276px;
@@ -608,8 +608,9 @@
             display: flex; align-items: center; justify-content: center;
             background: #fff;
             box-shadow: 0 2px 8px rgba(13,31,78,.10);
+            overflow: hidden;
           ">
-            <canvas id="qr-canvas" aria-label="Código QR de activación eSIM"></canvas>
+            <div id="qr-container" aria-label="Código QR de activación eSIM"></div>
           </div>
         </div>
 
@@ -719,7 +720,7 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/davidshimjs-qrcodejs@0.0.2/qrcode.min.js" crossorigin="anonymous"></script>
 <!-- config.js se carga en producción con los valores reales; si no existe, los valores por defecto abajo aplican -->
 <script src="config.js" onerror="void 0"></script>
 <script>
@@ -1620,21 +1621,21 @@ const app = (() => {
     document.getElementById('qr-iccid-display').textContent = formatIccid(_qrEsimActual.iccid);
     document.getElementById('qr-lpa-display').textContent = lpa;
 
-    // Limpiar canvas anterior
-    const canvas = document.getElementById('qr-canvas');
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     bsModalQR.show();
 
-    // Generar QR una vez que el modal es visible (requiere DOM visible)
-    document.getElementById('modal-qr').addEventListener('shown.bs.modal', async function handler() {
+    // Generar QR una vez que el modal es visible (requiere DOM visible para calcular tamaños)
+    document.getElementById('modal-qr').addEventListener('shown.bs.modal', function handler() {
       this.removeEventListener('shown.bs.modal', handler);
       try {
-        await QRCode.toCanvas(canvas, lpa, {
+        const container = document.getElementById('qr-container');
+        container.innerHTML = '';
+        new QRCode(container, {
+          text: lpa,
           width: 260,
-          margin: 2,
-          color: { dark: '#0d1f4e', light: '#ffffff' },
+          height: 260,
+          colorDark: '#0d1f4e',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.H,
         });
       } catch (err) {
         _toast('Error al generar el QR.', 'danger');
@@ -1666,7 +1667,8 @@ const app = (() => {
 
   async function descargarQR() {
     if (!_qrEsimActual) return;
-    const canvas = document.getElementById('qr-canvas');
+    const canvas = document.getElementById('qr-container').querySelector('canvas');
+    if (!canvas) { _toast('Genera el QR primero.', 'warning'); return; }
     const url = canvas.toDataURL('image/png');
     const a = document.createElement('a');
     a.href = url;
@@ -1679,9 +1681,10 @@ const app = (() => {
     const e = _qrEsimActual;
 
     // 1 — QR como base64 PNG (el canvas ya está pintado en el modal)
-    const canvas = document.getElementById('qr-canvas');
+    const canvas = document.getElementById('qr-container').querySelector('canvas');
+    if (!canvas) { _toast('Abre primero el QR para generarlo.', 'danger'); return; }
     const qrBase64 = canvas.toDataURL('image/png').split(',')[1];
-    if (!qrBase64) { _toast('Abre primero el QR para generarlo.', 'danger'); return; }
+    if (!qrBase64) { _toast('Error al leer el QR generado.', 'danger'); return; }
 
     // 2 — Cargar plantilla de correo y sustituir variables
     let htmlBody;
