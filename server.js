@@ -1,11 +1,14 @@
 const dns      = require('dns');
 dns.setDefaultResultOrder('ipv4first'); // evitar ENETUNREACH con registros AAAA de Supabase
 
-const express  = require('express');
-const path     = require('path');
-const fs       = require('fs');
-const { Pool } = require('pg');
+const express    = require('express');
+const path       = require('path');
+const fs         = require('fs');
+const { Pool }   = require('pg');
 const { Resend } = require('resend');
+const session    = require('express-session');
+const PgSession  = require('connect-pg-simple')(session);
+const bcrypt     = require('bcryptjs');
 
 const app    = express();
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -39,10 +42,30 @@ async function initDB() {
       ok         BOOLEAN NOT NULL,
       error_msg  TEXT
     );
+    CREATE TABLE IF NOT EXISTS users (
+      id            SERIAL PRIMARY KEY,
+      username      TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      created_at    TIMESTAMPTZ DEFAULT NOW()
+    );
   `);
 }
 
-initDB().catch(err => console.error('DB init error:', err));
+async function bootstrapAdmin() {
+  if (!process.env.ADMIN_USER || !process.env.ADMIN_PASSWORD) return;
+  const { rowCount } = await pool.query('SELECT 1 FROM users LIMIT 1');
+  if (rowCount > 0) return;
+  const hash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
+  await pool.query(
+    'INSERT INTO users (username, password_hash) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+    [process.env.ADMIN_USER, hash]
+  );
+  console.log(`Usuario admin "${process.env.ADMIN_USER}" creado.`);
+}
+
+initDB()
+  .then(bootstrapAdmin)
+  .catch(err => console.error('DB init error:', err));
 
 // Security headers
 app.use((req, res, next) => {
@@ -67,7 +90,59 @@ app.use((req, res, next) => {
   next();
 });
 
+app.set('trust proxy', 1); // Render usa HTTPS proxy
+
+app.use(session({
+  store: new PgSession({ pool, createTableIfMissing: true }),
+  secret: process.env.SESSION_SECRET || 'dev-secret-cambiar-en-produccion',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 8 * 60 * 60 * 1000, // 8 horas
+  },
+}));
+
 app.use(express.json({ limit: '5mb' }));
+
+// ── Auth ──────────────────────────────────────────────────────────
+
+app.get('/api/me', (req, res) => {
+  if (!req.session?.userId) return res.status(401).json({ error: 'No autenticado' });
+  res.json({ username: req.session.username });
+});
+
+app.post('/api/login', async (req, res) => {
+  const { username, password } = req.body ?? {};
+  if (!username || !password) return res.status(400).json({ error: 'Credenciales requeridas.' });
+  try {
+    const { rows } = await pool.query('SELECT * FROM users WHERE username=$1', [username]);
+    const user = rows[0];
+    if (!user || !await bcrypt.compare(password, user.password_hash)) {
+      return res.status(401).json({ error: 'Usuario o contraseña incorrectos.' });
+    }
+    req.session.userId   = user.id;
+    req.session.username = user.username;
+    res.json({ ok: true, username: user.username });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/logout', (req, res) => {
+  req.session.destroy(() => res.clearCookie('connect.sid').json({ ok: true }));
+});
+
+// Proteger todas las rutas /api/* excepto login y me
+app.use('/api', (req, res, next) => {
+  const publica = ['/login', '/me'];
+  if (publica.includes(req.path)) return next();
+  if (!req.session?.userId) return res.status(401).json({ error: 'No autenticado' });
+  next();
+});
+
 app.use(express.static(__dirname, { index: 'esims.html' }));
 
 // ── CRUD eSIMs ────────────────────────────────────────────────────
