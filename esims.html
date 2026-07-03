@@ -1561,19 +1561,12 @@ const app = (() => {
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Importando…';
 
     try {
-      for (const esim of _importPendientes) {
-        await dataProvider.create({
-          iccid:       esim.iccid,
-          servidor:    esim.servidor,
-          clave:       esim.clave,
-          pin:         esim.pin,
-          puk:         esim.puk,
-          estado:      'free',
-          id_cliente:  null,
-          email:       null,
-          fecha_usado: null,
-        });
-      }
+      const r = await fetch('/api/esims/bulk', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ esims: _importPendientes }),
+      });
+      if (!r.ok) { const e = await r.json(); throw new Error(e.error); }
       const n = _importPendientes.length;
       _toast(`${n} eSIM${n > 1 ? 's' : ''} importada${n > 1 ? 's' : ''} correctamente.`, 'success');
       bsModalImportar.hide();

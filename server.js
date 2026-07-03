@@ -78,6 +78,32 @@ app.get('/api/esims', async (req, res) => {
   }
 });
 
+app.post('/api/esims/bulk', async (req, res) => {
+  const { esims } = req.body;
+  if (!Array.isArray(esims) || !esims.length) {
+    return res.status(400).json({ error: 'Se requiere un array "esims".' });
+  }
+  const now = Date.now();
+  const ids      = esims.map((_, i) => `esim-${now}-${i}`);
+  const iccids   = esims.map(e => e.iccid);
+  const srvs     = esims.map(e => e.servidor);
+  const claves   = esims.map(e => e.clave);
+  const pins     = esims.map(e => e.pin);
+  const puks     = esims.map(e => e.puk);
+  try {
+    const { rowCount } = await pool.query(
+      `INSERT INTO esims (id, iccid, estado, servidor, clave, pin, puk)
+       SELECT * FROM unnest($1::text[],$2::text[],$3::text[],$4::text[],$5::text[],$6::text[],$7::text[])
+         AS t(id,iccid,estado,servidor,clave,pin,puk)
+       ON CONFLICT (iccid) DO NOTHING`,
+      [ids, iccids, Array(esims.length).fill('free'), srvs, claves, pins, puks]
+    );
+    res.json({ inserted: rowCount });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/esims', async (req, res) => {
   const { id, iccid, estado, servidor, clave, pin, puk, id_cliente, email, fecha_usado } = req.body;
   try {
