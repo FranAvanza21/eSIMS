@@ -1,3 +1,6 @@
+const dns      = require('dns');
+dns.setDefaultResultOrder('ipv4first'); // evitar ENETUNREACH con registros AAAA de Supabase
+
 const express  = require('express');
 const path     = require('path');
 const fs       = require('fs');
@@ -11,7 +14,6 @@ const PORT   = process.env.PORT || 3000;
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
-  family: 4, // forzar IPv4 — Supabase IPv6 no es alcanzable desde este entorno
 });
 
 async function initDB() {
