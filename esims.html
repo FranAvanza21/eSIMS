@@ -1304,18 +1304,33 @@ const app = (() => {
     if (!lineas.length) return { validas: [], errores: [] };
 
     const sep = lineas[0].includes(';') ? ';' : ',';
-    const primerCampo = lineas[0].split(sep)[0].trim().toLowerCase().replace(/^["']|["']$/g, '');
-    const tieneHeader = primerCampo === 'iccid' || !/^\d/.test(primerCampo);
-    const datos = tieneHeader ? lineas.slice(1) : lineas;
+    const primeraFila = lineas[0].split(sep).map(c => c.trim().replace(/^["']|["']$/g, ''));
+
+    // Formato extendido: >=9 columnas y la columna 4 parece un ICCID
+    const formatoExtendido = primeraFila.length >= 9 && /^\d{15,}$/.test(primeraFila[4]);
+
+    let datos = lineas;
+    let offset = 1;
+    if (!formatoExtendido) {
+      const primerCampo = primeraFila[0].toLowerCase();
+      const tieneHeader = primerCampo === 'iccid' || !/^\d/.test(primerCampo);
+      datos  = tieneHeader ? lineas.slice(1) : lineas;
+      offset = tieneHeader ? 2 : 1;
+    }
 
     const validas = [], errores = [];
 
     datos.forEach((linea, i) => {
       const cols = linea.split(sep).map(c => c.trim().replace(/^["']|["']$/g, ''));
-      const [iccid = '', servidor = '', clave = '', pin = '', puk = ''] = cols;
+      let iccid, servidor, clave, pin, puk;
+      if (formatoExtendido) {
+        [iccid = '', servidor = '', clave = '', pin = '', puk = ''] = cols.slice(4);
+      } else {
+        [iccid = '', servidor = '', clave = '', pin = '', puk = ''] = cols;
+      }
       const err = _validarCamposImport({ iccid, servidor, clave, pin, puk });
       if (err) {
-        errores.push({ fila: i + (tieneHeader ? 2 : 1), linea, error: err });
+        errores.push({ fila: i + offset, linea, error: err });
       } else {
         if (!validas.find(v => v.iccid === iccid) && !_importPendientes.find(p => p.iccid === iccid)) {
           validas.push({ iccid, servidor, clave, pin, puk });
@@ -1327,11 +1342,11 @@ const app = (() => {
   }
 
   function _validarCamposImport({ iccid, servidor, clave, pin, puk }) {
-    if (!/^\d{19}$/.test(iccid))      return 'ICCID inválido (19 dígitos exactos)';
-    if (!servidor || servidor.length > 32) return 'Servidor inválido';
-    if (!clave || clave.length > 32)   return 'Clave inválida';
-    if (!/^\d{4}$/.test(pin))          return 'PIN inválido (4 dígitos)';
-    if (!/^\d{8}$/.test(puk))          return 'PUK inválido (8 dígitos)';
+    if (!/^\d{19,20}$/.test(iccid))         return 'ICCID inválido (19-20 dígitos)';
+    if (!servidor || servidor.length > 100)  return 'Servidor inválido';
+    if (!clave || clave.length > 64)         return 'Clave inválida';
+    if (!/^\d{4}$/.test(pin))               return 'PIN inválido (4 dígitos)';
+    if (!/^\d{8}$/.test(puk))               return 'PUK inválido (8 dígitos)';
     return null;
   }
 
