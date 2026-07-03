@@ -1304,24 +1304,24 @@ const app = (() => {
     if (!lineas.length) return { validas: [], errores: [] };
 
     const sep = lineas[0].includes(';') ? ';' : ',';
-    const primeraFila = lineas[0].split(sep).map(c => c.trim().replace(/^["']|["']$/g, ''));
+    const parseFila = l => l.split(sep).map(c => c.trim().replace(/^["']|["']$/g, ''));
+    const primeraFila = parseFila(lineas[0]);
 
-    // Formato extendido: >=9 columnas y la columna 4 parece un ICCID
-    const formatoExtendido = primeraFila.length >= 9 && /^\d{15,}$/.test(primeraFila[4]);
+    // Detectar header: primera fila no empieza por dígito o dice "iccid"
+    const primerCampo = primeraFila[0].toLowerCase();
+    const primeraEsHeader = primerCampo === 'iccid' || !/^\d/.test(primeraFila[0]);
 
-    let datos = lineas;
-    let offset = 1;
-    if (!formatoExtendido) {
-      const primerCampo = primeraFila[0].toLowerCase();
-      const tieneHeader = primerCampo === 'iccid' || !/^\d/.test(primerCampo);
-      datos  = tieneHeader ? lineas.slice(1) : lineas;
-      offset = tieneHeader ? 2 : 1;
-    }
+    const datos  = primeraEsHeader ? lineas.slice(1) : lineas;
+    const offset = primeraEsHeader ? 2 : 1;
+
+    // Formato extendido: evaluar sobre la primera fila de DATOS (no el header)
+    const primeraFilaDatos = datos.length ? parseFila(datos[0]) : [];
+    const formatoExtendido = primeraFilaDatos.length >= 9 && /^\d{15,}$/.test(primeraFilaDatos[4]);
 
     const validas = [], errores = [];
 
     datos.forEach((linea, i) => {
-      const cols = linea.split(sep).map(c => c.trim().replace(/^["']|["']$/g, ''));
+      const cols = parseFila(linea);
       let iccid, servidor, clave, pin, puk;
       if (formatoExtendido) {
         [iccid = '', servidor = '', clave = '', pin = '', puk = ''] = cols.slice(4);
