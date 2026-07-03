@@ -11,6 +11,7 @@ const PORT   = process.env.PORT || 3000;
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
+  family: 4, // forzar IPv4 — Supabase IPv6 no es alcanzable desde este entorno
 });
 
 async function initDB() {
