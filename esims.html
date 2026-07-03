@@ -749,78 +749,44 @@ const ESTADOS = {
   sin_asignar: { label: 'Sin asig.',  clase: 'badge-sin-asignar' },
 };
 
-// ── Datos mock (compatibilidad mientras no hay API) ──────────────
-const MOCK_ESIMS = [
-  {
-    id: 'esim-001', iccid: '8934614020000123456', estado: 'assigned',
-    servidor: 'srv01.avanza.es', clave: 'ClaveEjemplo01Mock', pin: '1234', puk: '12345678',
-    id_cliente: 100042, email: 'mgarcia@gmail.com', fecha_usado: '2024-01-15',
-  },
-  {
-    id: 'esim-002', iccid: '8934614020000234567', estado: 'free',
-    servidor: 'srv01.avanza.es', clave: 'ClaveEjemplo02Mock', pin: '2345', puk: '23456789',
-    id_cliente: null, email: null, fecha_usado: null,
-  },
-  {
-    id: 'esim-003', iccid: '8934614020000345678', estado: 'assigned',
-    servidor: 'srv02.avanza.es', clave: 'ClaveEjemplo03Mock', pin: '3456', puk: '34567890',
-    id_cliente: 200099, email: 'afernandez@hotmail.com', fecha_usado: '2024-02-20',
-  },
-  {
-    id: 'esim-004', iccid: '8934614020000456789', estado: 'locked',
-    servidor: 'srv02.avanza.es', clave: 'ClaveEjemplo04Mock', pin: '4567', puk: '45678901',
-    id_cliente: 300011, email: 'jlopez@yahoo.es', fecha_usado: '2023-10-05',
-  },
-  {
-    id: 'esim-005', iccid: '8934614020000567890', estado: 'free',
-    servidor: 'srv01.avanza.es', clave: 'ClaveEjemplo05Mock', pin: '5678', puk: '56789012',
-    id_cliente: null, email: null, fecha_usado: null,
-  },
-];
 
 // ── Data provider ────────────────────────────────────────────────
 const dataProvider = {
-  _store: [...MOCK_ESIMS],
-  _nextId: MOCK_ESIMS.length + 1,
-
-  // TODO: API → GET ${CONFIG.SIA_BASE}/esims
   async getAll() {
-    await _delay(250);
-    return [...this._store];
+    const r = await fetch('/api/esims');
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
   },
 
-  // TODO: API → GET ${CONFIG.SIA_BASE}/esims/${id}
   async getById(id) {
-    await _delay(150);
-    return this._store.find(e => e.id === id) ?? null;
+    const all = await this.getAll();
+    return all.find(e => e.id === id) ?? null;
   },
 
-  // TODO: API → POST ${CONFIG.SIA_BASE}/esims
   async create(datos) {
-    await _delay(300);
-    const nueva = {
-      ...datos,
-      id: `esim-${String(this._nextId++).padStart(3, '0')}`,
-    };
-    this._store.push(nueva);
-    return { ...nueva };
+    const id = `esim-${Date.now()}`;
+    const r = await fetch('/api/esims', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...datos, id }),
+    });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.error); }
+    return r.json();
   },
 
-  // TODO: API → PUT ${CONFIG.SIA_BASE}/esims/${id}
   async update(id, datos) {
-    await _delay(300);
-    const idx = this._store.findIndex(e => e.id === id);
-    if (idx === -1) throw new Error('eSIM no encontrada');
-    this._store[idx] = { ...this._store[idx], ...datos };
-    return { ...this._store[idx] };
+    const r = await fetch(`/api/esims/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos),
+    });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.error); }
+    return r.json();
   },
 
-  // TODO: API → DELETE ${CONFIG.SIA_BASE}/esims/${id}
   async delete(id) {
-    await _delay(250);
-    const idx = this._store.findIndex(e => e.id === id);
-    if (idx === -1) throw new Error('eSIM no encontrada');
-    this._store.splice(idx, 1);
+    const r = await fetch(`/api/esims/${id}`, { method: 'DELETE' });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.error); }
   },
 };
 
@@ -853,9 +819,6 @@ function normalizar(str) {
     .normalize('NFD').replace(/[̀-ͯ]/g, '');
 }
 
-function _delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 
 // ── Módulo principal ─────────────────────────────────────────────
