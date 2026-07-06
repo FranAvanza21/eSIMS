@@ -972,18 +972,6 @@ const app = (() => {
       renderTabla();
     });
 
-    document.getElementById('f-iccid').addEventListener('input', () => {
-      if (state.modal.modo !== 'alta') return;
-      const iccid = document.getElementById('f-iccid').value.trim();
-      if (!/^\d{19,20}$/.test(iccid)) return;
-      const existe = state.esims.find(e => e.iccid === iccid);
-      if (!existe) return;
-      document.getElementById('f-servidor').value = existe.servidor ?? '';
-      document.getElementById('f-clave').value    = existe.clave    ?? '';
-      document.getElementById('f-pin').value      = existe.pin      ?? '';
-      document.getElementById('f-puk').value      = existe.puk      ?? '';
-    });
-
     document.getElementById('tbody-esims').addEventListener('click', e => {
       const btn = e.target.closest('[data-action]');
       if (!btn) return;
