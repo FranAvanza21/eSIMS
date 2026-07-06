@@ -237,7 +237,7 @@ app.delete('/api/esims/:id', async (req, res) => {
 // ── Envío de correo ───────────────────────────────────────────────
 
 app.post('/api/send-email', async (req, res) => {
-  const { to, iccid, nombre, qrBase64 } = req.body ?? {};
+  const { to, iccid, nombre, qrBase64, pin, puk } = req.body ?? {};
 
   if (!to || !iccid || !qrBase64) {
     return res.status(400).json({ error: 'Faltan campos: to, iccid, qrBase64.' });
@@ -256,6 +256,8 @@ app.post('/api/send-email', async (req, res) => {
     htmlBody = tpl
       .replace(/\{\{NOMBRE\}\}/g,   nombre || 'Cliente')
       .replace(/\{\{ICCID\}\}/g,    iccid)
+      .replace(/\{\{PIN\}\}/g,      pin  || '—')
+      .replace(/\{\{PUK\}\}/g,      puk  || '—')
       .replace(/\{\{QR_IMAGE\}\}/g, qrImg);
   } catch {
     return res.status(500).json({ error: 'No se pudo cargar la plantilla de correo.' });
