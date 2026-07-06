@@ -234,15 +234,13 @@ app.post('/api/send-email', async (req, res) => {
   let htmlBody;
   try {
     const tpl = fs.readFileSync(path.join(__dirname, 'email-activacion.html'), 'utf8');
-    const qrPlaceholder = `
-      <p style="margin:0 0 8px 0;font-size:13px;color:#374151;">
-        El código QR de activación se encuentra adjunto a este correo
-        como archivo <strong>qr-esim.png</strong>.
-      </p>`;
+    const qrImg = `<img src="cid:qr_esim" width="200" height="200"
+      alt="Código QR de activación"
+      style="display:block;margin:0 auto;border:0;outline:none;">`;
     htmlBody = tpl
       .replace(/\{\{NOMBRE\}\}/g,   nombre || 'Cliente')
       .replace(/\{\{ICCID\}\}/g,    iccid)
-      .replace(/\{\{QR_IMAGE\}\}/g, qrPlaceholder);
+      .replace(/\{\{QR_IMAGE\}\}/g, qrImg);
   } catch {
     return res.status(500).json({ error: 'No se pudo cargar la plantilla de correo.' });
   }
@@ -259,8 +257,9 @@ app.post('/api/send-email', async (req, res) => {
       html:    htmlBody,
       attachments: [
         {
-          filename: `qr-esim-${iccid}.png`,
-          content:  qrBase64,
+          filename:   `qr-esim-${iccid}.png`,
+          content:    qrBase64,
+          content_id: 'qr_esim',
         },
       ],
     });
