@@ -1205,7 +1205,7 @@ const app = (() => {
     _limpiarErrores();
     if (!_validarFormulario()) return;
 
-    const iccid = document.getElementById('f-iccid').value.trim();
+    const iccid = document.getElementById('f-iccid').value.trim().replace(/\s/g, '');
     const estado = document.getElementById('f-estado').value;
     const datos = {
       iccid,
@@ -1246,7 +1246,7 @@ const app = (() => {
   function _validarFormulario() {
     let valido = true;
 
-    const iccid = document.getElementById('f-iccid').value.trim();
+    const iccid = document.getElementById('f-iccid').value.trim().replace(/\s/g, '');
     if (!/^\d{19}$/.test(iccid)) {
       _mostrarErrorCampo('f-iccid', 'err-iccid', 'El ICCID debe tener exactamente 19 dígitos.');
       valido = false;
@@ -1431,6 +1431,7 @@ const app = (() => {
       } else {
         [iccid = '', servidor = '', clave = '', pin = '', puk = ''] = cols;
       }
+      iccid = iccid.replace(/\s/g, '');
       const err = _validarCamposImport({ iccid, servidor, clave, pin, puk });
       if (err) {
         errores.push({ fila: i + offset, linea, error: err });
