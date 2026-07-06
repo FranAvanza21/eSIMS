@@ -108,6 +108,7 @@
     }
 
     .field-error { font-size: 0.78rem; color: #dc3545; margin-top: 3px; }
+    .csv-readonly { background-color: #f8f9fa !important; color: #6b7280 !important; cursor: default; }
 
     .modal-header-avanza {
       background-color: var(--avanza-dark);
@@ -361,9 +362,9 @@
           <div class="row g-3">
 
             <div class="col-12 col-md-6">
-              <label class="form-label fw-500">ICCID <span class="text-danger">*</span></label>
+              <label class="form-label fw-500" id="lbl-iccid">ICCID <span class="text-danger">*</span></label>
               <input type="text" class="form-control font-monospace" id="f-iccid"
-                     placeholder="19 dígitos" maxlength="19">
+                     placeholder="19 dígitos" maxlength="20">
               <div class="field-error d-none" id="err-iccid"></div>
             </div>
 
@@ -377,28 +378,28 @@
             </div>
 
             <div class="col-12 col-md-6">
-              <label class="form-label fw-500">Servidor <span class="text-danger">*</span></label>
+              <label class="form-label fw-500" id="lbl-servidor">Servidor <span class="text-danger">*</span></label>
               <input type="text" class="form-control" id="f-servidor"
                      placeholder="máx. 32 caracteres" maxlength="32">
               <div class="field-error d-none" id="err-servidor"></div>
             </div>
 
             <div class="col-12 col-md-6">
-              <label class="form-label fw-500">Clave <span class="text-danger">*</span></label>
+              <label class="form-label fw-500" id="lbl-clave">Clave <span class="text-danger">*</span></label>
               <input type="text" class="form-control" id="f-clave"
                      placeholder="máx. 32 caracteres" maxlength="32">
               <div class="field-error d-none" id="err-clave"></div>
             </div>
 
             <div class="col-6 col-md-3">
-              <label class="form-label fw-500">PIN <span class="text-danger">*</span></label>
+              <label class="form-label fw-500" id="lbl-pin">PIN <span class="text-danger">*</span></label>
               <input type="text" class="form-control font-monospace" id="f-pin"
                      placeholder="4 dígitos" maxlength="4">
               <div class="field-error d-none" id="err-pin"></div>
             </div>
 
             <div class="col-6 col-md-3">
-              <label class="form-label fw-500">PUK <span class="text-danger">*</span></label>
+              <label class="form-label fw-500" id="lbl-puk">PUK <span class="text-danger">*</span></label>
               <input type="text" class="form-control font-monospace" id="f-puk"
                      placeholder="8 dígitos" maxlength="8">
               <div class="field-error d-none" id="err-puk"></div>
@@ -1149,11 +1150,28 @@ const app = (() => {
   }
 
   // ── Modal: Alta ───────────────────────────────────────────────
+  const CSV_FIELDS = ['f-iccid', 'f-servidor', 'f-clave', 'f-pin', 'f-puk'];
+  const CSV_LABELS = ['lbl-iccid', 'lbl-servidor', 'lbl-clave', 'lbl-pin', 'lbl-puk'];
+
+  function _setCsvFieldsEditable(editable) {
+    CSV_FIELDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (editable) { el.removeAttribute('readonly'); el.classList.remove('csv-readonly'); }
+      else          { el.setAttribute('readonly', ''); el.classList.add('csv-readonly'); }
+    });
+    CSV_LABELS.forEach(id => {
+      const lbl = document.getElementById(id);
+      const star = lbl.querySelector('span');
+      if (star) star.style.display = editable ? '' : 'none';
+    });
+  }
+
   function abrirModalAlta() {
     state.modal = { modo: 'alta', esimId: null };
     document.getElementById('modal-esim-titulo').innerHTML =
       '<i class="bi bi-plus-circle me-2"></i>Nueva eSIM';
     _limpiarFormulario();
+    _setCsvFieldsEditable(true);
     document.getElementById('f-estado').value = 'free';
     bsModalEsim.show();
   }
@@ -1168,6 +1186,7 @@ const app = (() => {
       const esim = await dataProvider.getById(id);
       if (!esim) { _toast('eSIM no encontrada.', 'danger'); return; }
       _rellenarFormulario(esim);
+      _setCsvFieldsEditable(false);
       bsModalEsim.show();
     } catch (err) {
       _toast('No se pudo cargar la eSIM.', 'danger');
@@ -1245,35 +1264,38 @@ const app = (() => {
 
   function _validarFormulario() {
     let valido = true;
+    const esAlta = state.modal.modo === 'alta';
 
-    const iccid = document.getElementById('f-iccid').value.trim().replace(/\s/g, '');
-    if (!/^\d{19}$/.test(iccid)) {
-      _mostrarErrorCampo('f-iccid', 'err-iccid', 'El ICCID debe tener exactamente 19 dígitos.');
-      valido = false;
-    }
+    if (esAlta) {
+      const iccid = document.getElementById('f-iccid').value.trim().replace(/\s/g, '');
+      if (!/^\d{19,20}$/.test(iccid)) {
+        _mostrarErrorCampo('f-iccid', 'err-iccid', 'El ICCID debe tener 19 o 20 dígitos.');
+        valido = false;
+      }
 
-    const servidor = document.getElementById('f-servidor').value.trim();
-    if (!servidor) {
-      _mostrarErrorCampo('f-servidor', 'err-servidor', 'El servidor es obligatorio.');
-      valido = false;
-    }
+      const servidor = document.getElementById('f-servidor').value.trim();
+      if (!servidor) {
+        _mostrarErrorCampo('f-servidor', 'err-servidor', 'El servidor es obligatorio.');
+        valido = false;
+      }
 
-    const clave = document.getElementById('f-clave').value.trim();
-    if (!clave) {
-      _mostrarErrorCampo('f-clave', 'err-clave', 'La clave es obligatoria.');
-      valido = false;
-    }
+      const clave = document.getElementById('f-clave').value.trim();
+      if (!clave) {
+        _mostrarErrorCampo('f-clave', 'err-clave', 'La clave es obligatoria.');
+        valido = false;
+      }
 
-    const pin = document.getElementById('f-pin').value.trim();
-    if (!/^\d{4}$/.test(pin)) {
-      _mostrarErrorCampo('f-pin', 'err-pin', 'Debe tener 4 dígitos.');
-      valido = false;
-    }
+      const pin = document.getElementById('f-pin').value.trim();
+      if (!/^\d{4}$/.test(pin)) {
+        _mostrarErrorCampo('f-pin', 'err-pin', 'Debe tener 4 dígitos.');
+        valido = false;
+      }
 
-    const puk = document.getElementById('f-puk').value.trim();
-    if (!/^\d{8}$/.test(puk)) {
-      _mostrarErrorCampo('f-puk', 'err-puk', 'Debe tener 8 dígitos.');
-      valido = false;
+      const puk = document.getElementById('f-puk').value.trim();
+      if (!/^\d{8}$/.test(puk)) {
+        _mostrarErrorCampo('f-puk', 'err-puk', 'Debe tener 8 dígitos.');
+        valido = false;
+      }
     }
 
     const idCliente = document.getElementById('f-id-cliente').value;
