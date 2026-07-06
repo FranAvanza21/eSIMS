@@ -243,10 +243,10 @@ app.post('/api/send-email', async (req, res) => {
     return res.status(400).json({ error: 'Faltan campos: to, iccid, qrBase64.' });
   }
 
+  const iccidRaw = iccid.replace(/\s/g, '');
   let htmlBody;
   try {
     const tpl = fs.readFileSync(path.join(__dirname, 'email-activacion.html'), 'utf8');
-    const iccidRaw = iccid.replace(/\s/g, '');
     qrCache.set(iccidRaw, qrBase64);
     const baseUrl = `${req.protocol}://${req.get('host')}`;
     const qrUrl  = `${baseUrl}/qr/${iccidRaw}.png`;
