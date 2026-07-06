@@ -1310,11 +1310,13 @@ const app = (() => {
   async function confirmarCambioEstado() {
     const id          = state.pendienteEstadoId;
     const nuevoEstado = document.getElementById('select-nuevo-estado').value;
+    const esim        = state.esims.find(e => e.id === id);
+    if (!esim) return;
     const extra = nuevoEstado === 'assigned'
       ? { fecha_usado: new Date().toISOString().slice(0, 10) }
       : {};
     try {
-      await dataProvider.update(id, { estado: nuevoEstado, ...extra });
+      await dataProvider.update(id, { ...esim, estado: nuevoEstado, ...extra });
       _toast('Estado actualizado.', 'success');
       bsModalEstado.hide();
       await cargarESims();
