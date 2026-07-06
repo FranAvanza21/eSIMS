@@ -189,7 +189,7 @@
       <i class="bi bi-sim-fill me-1"></i>AVANZA FIBRA
     </div>
     <p class="text-muted mb-4" style="font-size:.82rem">Gestión de eSIMs — acceso restringido</p>
-    <form id="login-form" novalidate autocomplete="on">
+    <form id="login-form" method="post" novalidate autocomplete="on">
       <div class="mb-3">
         <label class="form-label fw-500">Usuario</label>
         <input type="text" class="form-control" id="login-user"
@@ -905,34 +905,36 @@ const app = (() => {
 
   function _mostrarLogin() {
     document.getElementById('login-overlay').classList.remove('d-none');
-    const form = document.getElementById('login-form');
-    form.addEventListener('submit', async e => {
-      e.preventDefault();
-      const btn = document.getElementById('login-btn');
-      const err = document.getElementById('login-error');
-      btn.disabled = true;
-      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Entrando…';
-      err.classList.add('d-none');
-      try {
-        const r = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username: document.getElementById('login-user').value.trim(),
-            password: document.getElementById('login-pass').value,
-          }),
-        });
-        const data = await r.json();
-        if (!r.ok) throw new Error(data.error);
-        document.getElementById('login-overlay').classList.add('d-none');
-        _mostrarApp(data.username);
-      } catch (e) {
-        err.textContent = e.message || 'Error al iniciar sesión.';
-        err.classList.remove('d-none');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-box-arrow-in-right me-1"></i>Entrar';
-      }
-    }, { once: true });
+    document.getElementById('login-form').addEventListener('submit', _onLoginSubmit);
+  }
+
+  async function _onLoginSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('login-btn');
+    const err = document.getElementById('login-error');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Entrando…';
+    err.classList.add('d-none');
+    try {
+      const r = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: document.getElementById('login-user').value.trim(),
+          password: document.getElementById('login-pass').value,
+        }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error);
+      document.getElementById('login-form').removeEventListener('submit', _onLoginSubmit);
+      document.getElementById('login-overlay').classList.add('d-none');
+      _mostrarApp(data.username);
+    } catch (ex) {
+      err.textContent = ex.message || 'Error al iniciar sesión.';
+      err.classList.remove('d-none');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-box-arrow-in-right me-1"></i>Entrar';
+    }
   }
 
   async function _mostrarApp(username) {
