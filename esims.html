@@ -890,22 +890,27 @@ const app = (() => {
 
   // ── Auth ──────────────────────────────────────────────────────
   async function init() {
+    // Listener adjunto ANTES del fetch para no depender del tiempo de respuesta
+    document.getElementById('login-form').addEventListener('submit', _onLoginSubmit);
+
     try {
-      const r = await fetch('/api/me');
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 5000);
+      const r = await fetch('/api/me', { signal: ctrl.signal });
+      clearTimeout(timer);
       if (r.ok) {
         const { username } = await r.json();
+        document.getElementById('login-form').removeEventListener('submit', _onLoginSubmit);
         _mostrarApp(username);
-      } else {
-        _mostrarLogin();
+        return;
       }
-    } catch {
-      _mostrarLogin();
-    }
+    } catch { /* no autenticado o timeout */ }
+
+    _mostrarLogin();
   }
 
   function _mostrarLogin() {
     document.getElementById('login-overlay').classList.remove('d-none');
-    document.getElementById('login-form').addEventListener('submit', _onLoginSubmit);
   }
 
   async function _onLoginSubmit(e) {
