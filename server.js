@@ -67,6 +67,18 @@ initDB()
   .then(bootstrapAdmin)
   .catch(err => console.error('DB init error:', err));
 
+// Cache en memoria para QRs pendientes de entregar por correo
+const qrCache = new Map();
+
+// QR temporal — sin CSP ni auth (URL opaca con ICCID como clave)
+app.get('/qr/:iccid.png', (req, res) => {
+  const data = qrCache.get(req.params.iccid);
+  if (!data) return res.status(404).end();
+  res.setHeader('Content-Type', 'image/png');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.send(Buffer.from(data, 'base64'));
+});
+
 // Security headers
 app.use((req, res, next) => {
   res.setHeader('X-Frame-Options', 'DENY');
@@ -234,7 +246,11 @@ app.post('/api/send-email', async (req, res) => {
   let htmlBody;
   try {
     const tpl = fs.readFileSync(path.join(__dirname, 'email-activacion.html'), 'utf8');
-    const qrImg = `<img src="cid:qr_esim" width="200" height="200"
+    const iccidRaw = iccid.replace(/\s/g, '');
+    qrCache.set(iccidRaw, qrBase64);
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const qrUrl  = `${baseUrl}/qr/${iccidRaw}.png`;
+    const qrImg  = `<img src="${qrUrl}" width="200" height="200"
       alt="Código QR de activación"
       style="display:block;margin:0 auto;border:0;outline:none;">`;
     htmlBody = tpl
@@ -255,13 +271,6 @@ app.post('/api/send-email', async (req, res) => {
       to:      [to],
       subject: `Tu eSIM AVANZA FIBRA está lista — Nº ${iccid}`,
       html:    htmlBody,
-      attachments: [
-        {
-          filename:   `qr-esim-${iccid}.png`,
-          content:    qrBase64,
-          content_id: 'qr_esim',
-        },
-      ],
     });
     if (error) throw new Error(error.message);
     resendId = data.id;
@@ -270,7 +279,6 @@ app.post('/api/send-email', async (req, res) => {
     errorMsg = err.message;
   }
 
-  const iccidRaw = iccid.replace(/\s/g, '');
   await pool.query(
     `INSERT INTO email_logs (iccid, to_email, resend_id, ok, error_msg) VALUES ($1,$2,$3,$4,$5)`,
     [iccidRaw, to, resendId, ok, errorMsg]
