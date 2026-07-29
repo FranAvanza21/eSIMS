@@ -155,6 +155,7 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(__dirname, { index: 'esims.html' }));
 
 // ── CRUD eSIMs ────────────────────────────────────────────────────
