@@ -297,7 +297,7 @@ La v5 sigue siendo una opción válida si prefieres CommonJS puro; solo hay que 
 | `OIDC_CLIENT_SECRET` | Sí, si se activa OIDC | `…` | Cliente confidencial |
 | **`OIDC_REDIRECT_URI`** | **Sí, si se activa OIDC** | `https://esims.avzdev.com/auth/oidc/callback` | **Absoluta. Ver §7** |
 | `OIDC_VINCULAR_SIN_EMAIL_VERIFICADO` | No (por defecto `false`) | `true` | **Ver §5. Sin esto no se vincula nadie** |
-| `AVISO_AUTHENTIK_FECHA` | No | `1 de octubre de 2026` | Sin ella el aviso no se pinta |
+| `AVISO_AUTHENTIK_FECHA` | No | `a lo largo de esta semana` | **Una frase**, encaja tras «dejará de funcionar». Sin ella el aviso no se pinta |
 | `AVISO_AUTHENTIK_RECOVERY_URL` | No | `https://auth.avanzafibra.net/if/flow/password-recovery/` | Por defecto ese mismo valor. Está como variable por si cambia el slug |
 
 ### El interruptor

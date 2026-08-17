@@ -26,7 +26,7 @@ este cambio, pero conviene saberlo si montas una instancia de pruebas desde cero
 | `OIDC_CLIENT_SECRET` | ” | del Provider de Authentik |
 | `OIDC_REDIRECT_URI` | ” | `https://esims.avzdev.com/auth/oidc/callback` |
 | `OIDC_VINCULAR_SIN_EMAIL_VERIFICADO` | **Obligatoria en la práctica** | `true` — ver §4 |
-| `AVISO_AUTHENTIK_FECHA` | Solo al encender el aviso | `1 de octubre de 2026` |
+| `AVISO_AUTHENTIK_FECHA` | Solo al encender el aviso | **Una frase, no una fecha suelta:** `a lo largo de esta semana`, `el 1 de octubre`… Ver §6bis |
 | `AVISO_AUTHENTIK_RECOVERY_URL` | Opcional | por defecto el flujo de recuperación de Authentik |
 
 ---
@@ -184,6 +184,46 @@ emergencia real. Se cambia con una línea, documentada en `migracion-authentik-4
 
 ---
 
+## 6bis. El aviso de migración
+
+Se pinta en **dos sitios**: dentro del overlay de acceso y como barra fija arriba en la
+aplicación ya abierta. Lo segundo no es opcional: con sesiones de 8 h, quien la tiene viva
+no pasa por el login y no se enteraría.
+
+### `AVISO_AUTHENTIK_FECHA` es una FRASE, no una fecha
+
+El texto dice *«El acceso con usuario y contraseña **dejará de funcionar {{FECHA}}**»*, así
+que el valor tiene que encajar detrás de esa expresión, con su preposición incluida:
+
+| Valor | Cómo queda |
+|---|---|
+| `a lo largo de esta semana` | «…dejará de funcionar a lo largo de esta semana.» ✅ |
+| `el 1 de octubre` | «…dejará de funcionar el 1 de octubre.» ✅ |
+| `1 de octubre de 2026` | «…dejará de funcionar 1 de octubre de 2026.» ❌ falta «el» |
+
+**Sin la variable no se pinta nada**, ni en el overlay ni en la barra. Ese es el
+interruptor: no la pongas hasta haber comprobado N8 y N11.
+
+### Contenido
+
+- Encabezado en mayúsculas **«Cambio en la forma de entrar»** con icono de aviso.
+- Cuándo deja de funcionar el acceso actual.
+- Que lo prueben ya, con su correo `@avanzasolutions.es` o `@avanzafibra.com`.
+- **Un botón**, no un enlace suelto: «Crear mi contraseña de Avanza», que lleva directo al
+  flujo de recuperación de Authentik. Es la acción que más cuesta que la gente haga, así
+  que va como botón y con su propia pregunta encima.
+
+En la barra de dentro de la aplicación el segundo párrafo cambia («La próxima vez, entra
+con el botón…»), porque ahí no hay ningún botón de acceso debajo al que señalar.
+
+### Accesibilidad
+
+`role="alert"` en los dos sitios, e **icono más encabezado además del color**, para que no
+dependa de distinguir el rojo. Sobre el fondo `#fdecea`: encabezado `#b02a37` ≈ 6.2:1 y
+texto `#7a2430` ≈ 8.9:1, los dos por encima del 4.5:1 de WCAG AA.
+
+---
+
 ## 6. Lo que SOLO se puede comprobar con navegador
 
 `curl` no puede pasar por el login interactivo de Authentik.
@@ -198,8 +238,8 @@ emergencia real. Se cambia con una línea, documentada en `migracion-authentik-4
 | N6 | Cerrar sesión con una sesión de Authentik | Pasa por el `end_session` de Authentik |
 | N7 | Cerrar sesión con la cuenta `admin` (login local) | Recarga y vuelve al login, como siempre |
 | N8 | **Con `AVISO_AUTHENTIK_FECHA` puesta**, a 1366×768 y a 360×640 | El aviso se ve **y el botón «Entrar» sigue alcanzable**, con scroll si hace falta |
-| N9 | Con sesión ya iniciada | La barra roja aparece arriba, fija, y no tapa el navbar |
-| N10 | El enlace «créate una aquí» del aviso | Abre el flujo de recuperación de Authentik |
+| N9 | Con sesión ya iniciada | La barra aparece arriba, fija, en horizontal y con el botón a la derecha, sin tapar el navbar |
+| N10 | El botón «Crear mi contraseña de Avanza» | Abre el flujo de recuperación de Authentik en otra pestaña |
 | N11 | **(B3)** En ventana de **incógnito**, pedir recuperar contraseña | **El correo llega.** Con sesión iniciada Authentik deniega el flujo, por eso incógnito |
 | N13 | Entrar como **fvalera o jgalvez** | Aparece el botón «Administrador» en la navbar |
 | N14 | Entrar con cualquiera de los otros 9 | **NO** aparece ese botón |

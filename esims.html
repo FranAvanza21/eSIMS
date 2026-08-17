@@ -182,21 +182,55 @@
     }
 
     /* ── Aviso de migración a Authentik ── */
+    /* No se comunica solo con el color: icono + encabezado + role="alert".
+       Contrastes sobre #fdecea: encabezado #b02a37 ≈ 6.2:1, texto #7a2430 ≈ 8.9:1,
+       los dos por encima del 4.5:1 de WCAG AA. */
     .aviso-authentik {
-      background: #b02a37; /* 6.4:1 sobre blanco — el #dc3545 de Bootstrap no llega */
-      color: #fff;
-      padding: .8rem 1rem;
-      font-size: .87rem;
-      line-height: 1.45;
+      background: #fdecea;
+      border: 1px solid #f0b3ae;
+      color: #7a2430;
+      padding: .9rem 1rem;
+      font-size: .85rem;
+      line-height: 1.5;
       text-align: left;
     }
-    .aviso-authentik a { color: #fff; font-weight: 600; }
-    .aviso-authentik ul { margin: .35rem 0 0; padding-left: 1.15rem; }
-    .aviso-authentik li + li { margin-top: .2rem; }
+    .aviso-authentik .aviso-cab {
+      display: flex; align-items: center; gap: .4rem;
+      color: #b02a37; font-weight: 700; font-size: .82rem;
+      text-transform: uppercase; letter-spacing: .3px;
+      margin-bottom: .5rem;
+    }
+    .aviso-authentik p { margin: 0 0 .55rem; }
+    .aviso-authentik strong { color: #8c1f2b; }
+    .aviso-authentik .aviso-pregunta { font-weight: 600; }
+    .aviso-authentik .aviso-btn {
+      display: inline-block; width: 100%; text-align: center;
+      background: #fff; color: #b02a37;
+      border: 1px solid #e0a0a0; border-radius: 8px;
+      padding: .55rem 1rem; margin-top: .15rem;
+      font-weight: 600; font-size: .85rem; text-decoration: none;
+    }
+    .aviso-authentik .aviso-btn:hover,
+    .aviso-authentik .aviso-btn:focus {
+      background: #b02a37; color: #fff; border-color: #b02a37;
+    }
     #aviso-login { border-radius: 8px; margin-bottom: 1rem; }
+    /* Barra dentro de la aplicación: mismo contenido, en horizontal. */
     #aviso-barra {
       position: sticky; top: 0; z-index: 1030;
-      border-bottom: 3px solid #7d1d26;
+      border-width: 0 0 3px; border-bottom-color: #b02a37; border-radius: 0;
+      padding: .7rem 1rem;
+    }
+    #aviso-barra .aviso-interior {
+      display: flex; flex-wrap: wrap; align-items: center;
+      gap: .35rem 1.25rem; max-width: 1400px; margin: 0 auto;
+    }
+    #aviso-barra .aviso-cab { margin-bottom: 0; }
+    #aviso-barra p { margin-bottom: 0; }
+    #aviso-barra .aviso-pregunta { display: none; } /* redundante junto al botón */
+    #aviso-barra .aviso-btn { width: auto; margin: 0 0 0 auto; white-space: nowrap; }
+    @media (max-width: 575.98px) {
+      #aviso-barra .aviso-btn { width: 100%; margin-left: 0; }
     }
     .login-logo {
       font-size: 1.1rem; font-weight: 700;
@@ -1032,22 +1066,35 @@ const app = (() => {
     if (cfg.oidcEnabled) document.getElementById('oidc-bloque').hidden = false;
     if (!cfg.fecha) return; // sin AVISO_AUTHENTIK_FECHA no se pinta nada
 
-    const html =
-      '<div class="fw-bold mb-1">' +
-        '<i class="bi bi-exclamation-triangle-fill me-1"></i>Cambio en el acceso' +
-      '</div>' +
-      'El <strong>' + esc(cfg.fecha) + '</strong> el inicio de sesión pasa a ser con la cuenta de Avanza.' +
-      '<ul>' +
-        '<li>Entra <strong>ya</strong> con el botón «Entrar con la cuenta de Avanza» para comprobar que te funciona.</li>' +
-        '<li>Usa tu correo <strong>@avanzafibra.com</strong> o <strong>@avanzasolutions.es</strong>.</li>' +
-        '<li>Todavía no tienes contraseña: ' +
-          '<a href="' + esc(cfg.recoveryUrl) + '" target="_blank" rel="noopener">créate una aquí</a>.</li>' +
-      '</ul>';
+    // cfg.fecha es una frase completa ("a lo largo de esta semana",
+    // "el 1 de octubre"), no una fecha suelta: encaja detrás de
+    // "dejará de funcionar" tal cual venga de la variable de entorno.
+    const cabecera =
+      '<div class="aviso-cab">' +
+        '<i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>' +
+        'Cambio en la forma de entrar' +
+      '</div>';
 
-    for (const id of ['aviso-login', 'aviso-barra']) {
+    const bloque = comoEntrar =>
+      '<div class="aviso-interior">' +
+        cabecera +
+        '<p>El acceso con usuario y contraseña <strong>dejará de funcionar ' +
+          esc(cfg.fecha) + '</strong>.</p>' +
+        '<p>' + comoEntrar + ', usando tu correo ' +
+          '<strong>@avanzasolutions.es</strong> o <strong>@avanzafibra.com</strong>.</p>' +
+        '<p class="aviso-pregunta">¿Todavía no tienes contraseña de Avanza?</p>' +
+        '<a class="aviso-btn" href="' + esc(cfg.recoveryUrl) + '" target="_blank" rel="noopener">' +
+          'Crear mi contraseña de Avanza</a>' +
+      '</div>';
+
+    const destinos = [
+      ['aviso-login', 'Pruébalo ya con el botón de abajo'],
+      ['aviso-barra', 'La próxima vez, entra con el botón «Entrar con la cuenta de Avanza»'],
+    ];
+    for (const [id, comoEntrar] of destinos) {
       const el = document.getElementById(id);
       if (!el) continue;
-      el.innerHTML = html;
+      el.innerHTML = bloque(comoEntrar);
       el.hidden = false;
     }
   }
