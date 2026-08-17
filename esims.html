@@ -164,7 +164,12 @@
     #login-overlay {
       position: fixed; inset: 0; z-index: 9999;
       background: var(--avanza-dark);
-      display: flex; align-items: center; justify-content: center;
+      /* align-items:flex-start + overflow-y:auto + margin:auto en la tarjeta.
+         Con align-items:center y sin overflow, si la tarjeta crece más que la
+         ventana desborda por arriba y esa parte queda INALCANZABLE: el botón
+         de entrar deja de verse y no hay forma de desplazarse hasta él. */
+      display: flex; align-items: flex-start; justify-content: center;
+      overflow-y: auto; padding: 1.5rem 1rem;
     }
     #login-overlay.d-none { display: none !important; }
     .login-card {
@@ -173,6 +178,25 @@
       padding: 2.5rem 2rem;
       width: 100%; max-width: 360px;
       box-shadow: 0 8px 32px rgba(0,0,0,.3);
+      margin: auto; /* centra si cabe; no recorta si no cabe */
+    }
+
+    /* ── Aviso de migración a Authentik ── */
+    .aviso-authentik {
+      background: #b02a37; /* 6.4:1 sobre blanco — el #dc3545 de Bootstrap no llega */
+      color: #fff;
+      padding: .8rem 1rem;
+      font-size: .87rem;
+      line-height: 1.45;
+      text-align: left;
+    }
+    .aviso-authentik a { color: #fff; font-weight: 600; }
+    .aviso-authentik ul { margin: .35rem 0 0; padding-left: 1.15rem; }
+    .aviso-authentik li + li { margin-top: .2rem; }
+    #aviso-login { border-radius: 8px; margin-bottom: 1rem; }
+    #aviso-barra {
+      position: sticky; top: 0; z-index: 1030;
+      border-bottom: 3px solid #7d1d26;
     }
     .login-logo {
       font-size: 1.1rem; font-weight: 700;
@@ -184,6 +208,9 @@
 </head>
 <body class="bg-light">
 
+<!-- ─── Aviso de migración (app ya logueada) ─── -->
+<div id="aviso-barra" class="aviso-authentik" role="alert" hidden></div>
+
 <!-- ─── Login ─── -->
 <div id="login-overlay">
   <div class="login-card">
@@ -191,6 +218,20 @@
       <i class="bi bi-sim-fill me-1"></i>AVANZA FIBRA
     </div>
     <p class="text-muted mb-4" style="font-size:.82rem">Gestión de eSIMs — acceso restringido</p>
+
+    <!-- ─── Aviso de migración (pantalla de acceso) ─── -->
+    <div id="aviso-login" class="aviso-authentik" role="alert" hidden></div>
+
+    <!-- ─── Acceso con Authentik ─── -->
+    <div id="oidc-bloque" hidden>
+      <a href="/auth/oidc/login" class="btn btn-avanza w-100">
+        <i class="bi bi-shield-lock me-1"></i>Entrar con la cuenta de Avanza
+      </a>
+      <div class="d-flex align-items-center gap-2 my-3 text-muted" style="font-size:.75rem">
+        <hr class="flex-grow-1 my-0"><span>o con tu usuario de siempre</span><hr class="flex-grow-1 my-0">
+      </div>
+    </div>
+
     <form id="login-form" novalidate autocomplete="on" onsubmit="return false">
       <div class="mb-3">
         <label class="form-label fw-500">Usuario</label>
@@ -229,8 +270,12 @@
     </div>
     <div class="d-flex align-items-center gap-3">
       <small class="text-white-50 d-none d-sm-inline" id="usuario-info"></small>
+      <button class="btn btn-sm btn-outline-light py-1 d-none" id="btn-admin"
+              onclick="app.abrirAdmin()">
+        <i class="bi bi-people me-1"></i><span class="d-none d-sm-inline">Administrador</span>
+      </button>
       <button class="btn btn-sm btn-outline-light py-1" onclick="app.logout()">
-        <i class="bi bi-box-arrow-right me-1"></i>Salir
+        <i class="bi bi-box-arrow-right me-1"></i><span class="d-none d-sm-inline">Salir</span>
       </button>
     </div>
   </div>
@@ -761,6 +806,68 @@
 
 
 <!-- Toast -->
+<!-- ─── Administrador: usuarios ─── -->
+<div class="modal fade" id="modal-admin" tabindex="-1" aria-labelledby="modal-admin-titulo" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header modal-header-avanza">
+        <h5 class="modal-title" id="modal-admin-titulo">
+          <i class="bi bi-people me-2" aria-hidden="true"></i>Administrador — usuarios
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <div class="modal-body px-4 py-3">
+
+        <form class="row g-2 align-items-end mb-3" onsubmit="return false">
+          <div class="col-12 col-sm-6">
+            <label class="form-label fw-500" for="admin-nuevo-correo">Correo del nuevo usuario</label>
+            <input type="email" class="form-control" id="admin-nuevo-correo"
+                   placeholder="nombre@avanzafibra.com" autocomplete="off">
+          </div>
+          <div class="col-7 col-sm-3">
+            <label class="form-label fw-500" for="admin-nuevo-rol">Rol</label>
+            <select class="form-select" id="admin-nuevo-rol">
+              <option value="usuario" selected>Usuario</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+          <div class="col-5 col-sm-3">
+            <button class="btn btn-avanza w-100" id="admin-btn-crear" onclick="app.crearUsuario()">
+              <i class="bi bi-plus-lg me-1"></i>Añadir
+            </button>
+          </div>
+        </form>
+
+        <div class="alert alert-danger py-2 d-none" id="admin-error"
+             style="font-size:.85rem" role="alert"></div>
+
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead>
+              <tr>
+                <th scope="col">Usuario</th>
+                <th scope="col">Rol</th>
+                <th scope="col">Authentik</th>
+                <th scope="col" class="text-end">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="admin-tbody"></tbody>
+          </table>
+        </div>
+
+        <p class="text-muted mb-0 mt-3" style="font-size:.78rem">
+          Los usuarios nuevos entran <strong>solo con la cuenta de Avanza</strong>: no se les crea
+          contraseña local. El correo debe coincidir <strong>exactamente</strong> con el que tienen
+          en Authentik, o no podrán entrar.
+        </p>
+
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="position-fixed bottom-0 end-0 p-3 toast-container-app">
   <div class="toast" id="app-toast" role="alert" aria-live="assertive" data-bs-delay="3500">
     <div class="toast-header">
@@ -887,24 +994,62 @@ const app = (() => {
     pendienteEliminarId: null,
   };
 
-  let bsModalEsim, bsModalEstado, bsModalConfirmar, bsModalImportar, bsModalQR, bsToast;
+  let bsModalEsim, bsModalEstado, bsModalConfirmar, bsModalImportar, bsModalQR, bsModalAdmin, bsToast;
+  let _yoId = null;            // id del usuario de la sesión actual
+  let _usuariosCache = [];     // última lista cargada en el panel de administración
   let _importPendientes = [];
   let _qrEsimActual = null;
 
   // ── Auth ──────────────────────────────────────────────────────
   async function init() {
+    _cargarAviso(); // sin await: no debe retrasar la carga de la aplicación
     try {
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 5000);
       const r = await fetch('/api/me', { signal: ctrl.signal });
       clearTimeout(timer);
       if (r.ok) {
-        const { username } = await r.json();
+        const { username, rol, id } = await r.json();
+        _yoId = id ?? null;
         document.getElementById('login-overlay').classList.add('d-none');
-        _mostrarApp(username);
+        _mostrarApp(username, rol);
         return;
       }
     } catch { /* no autenticado o timeout */ }
+  }
+
+  // Aviso de migración a Authentik. Se pinta en los DOS sitios: en la pantalla
+  // de acceso y como barra fija dentro de la aplicación — la sesión dura 8 h, y
+  // quien la tiene viva no pasa por el login y no se enteraría.
+  async function _cargarAviso() {
+    let cfg;
+    try {
+      const r = await fetch('/api/aviso');
+      if (!r.ok) return;
+      cfg = await r.json();
+    } catch { return; }
+
+    if (cfg.oidcEnabled) document.getElementById('oidc-bloque').hidden = false;
+    if (!cfg.fecha) return; // sin AVISO_AUTHENTIK_FECHA no se pinta nada
+
+    const html =
+      '<div class="fw-bold mb-1">' +
+        '<i class="bi bi-exclamation-triangle-fill me-1"></i>Cambio en el acceso' +
+      '</div>' +
+      'El <strong>' + esc(cfg.fecha) + '</strong> el inicio de sesión pasa a ser con la cuenta de Avanza.' +
+      '<ul>' +
+        '<li>Entra <strong>ya</strong> con el botón «Entrar con la cuenta de Avanza» para comprobar que te funciona.</li>' +
+        '<li>Usa tu correo <strong>@avanzafibra.com</strong> o <strong>@avanzasolutions.es</strong>.</li>' +
+        '<li>Todavía no tienes contraseña: ' +
+          '<a href="' + esc(cfg.recoveryUrl) + '" target="_blank" rel="noopener">créate una aquí</a>.</li>' +
+      '</ul>';
+
+    for (const id of ['aviso-login', 'aviso-barra']) {
+      const el = document.getElementById(id);
+      if (!el) continue;
+      el.innerHTML = html;
+      el.hidden = false;
+    }
   }
 
   async function handleLogin() {
@@ -924,8 +1069,12 @@ const app = (() => {
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error);
+      // El rol no viene en la respuesta del login (no se ha tocado ese endpoint):
+      // se pide aparte, igual que hace init().
+      const me = await fetch('/api/me').then(x => x.ok ? x.json() : null).catch(() => null);
+      _yoId = me?.id ?? null;
       document.getElementById('login-overlay').classList.add('d-none');
-      _mostrarApp(data.username);
+      _mostrarApp(data.username, me?.rol);
     } catch (ex) {
       err.textContent = ex.message || 'Error al iniciar sesión.';
       err.classList.remove('d-none');
@@ -934,17 +1083,139 @@ const app = (() => {
     }
   }
 
-  async function _mostrarApp(username) {
+  async function _mostrarApp(username, rol) {
     document.getElementById('usuario-info').textContent = username;
+    // El botón solo se pinta a los administradores. La comprobación de verdad
+    // está en el servidor: /api/admin/* relee el rol de la base de datos.
+    if (rol === 'admin') document.getElementById('btn-admin').classList.remove('d-none');
     _initBootstrap();
     _bindEventos();
     _initDropZone();
     await cargarESims();
   }
 
+  // ── Administrador: usuarios ───────────────────────────────────
+
+  async function abrirAdmin() {
+    bsModalAdmin.show();
+    await _cargarUsuarios();
+  }
+
+  function _errorAdmin(msg) {
+    const el = document.getElementById('admin-error');
+    if (!msg) { el.classList.add('d-none'); return; }
+    el.textContent = msg;
+    el.classList.remove('d-none');
+  }
+
+  async function _cargarUsuarios() {
+    _errorAdmin('');
+    const tbody = document.getElementById('admin-tbody');
+    tbody.innerHTML = '<tr><td colspan="4" class="text-muted small py-3">Cargando…</td></tr>';
+    try {
+      const r = await fetch('/api/admin/users');
+      const datos = await r.json();
+      if (!r.ok) throw new Error(datos.error);
+      _usuariosCache = datos;
+      // Nada de interpolar el nombre en los onclick: sólo el id, que es numérico.
+      // Un correo puede llevar comilla simple y rompería el atributo.
+      tbody.innerHTML = datos.map(u => {
+        const soyYo = u.id === _yoId;
+        return '<tr>' +
+          '<td class="text-break">' + esc(u.username) +
+            (soyYo ? ' <span class="badge text-bg-secondary">tú</span>' : '') + '</td>' +
+          '<td><select class="form-select form-select-sm" style="width:auto"' +
+            (soyYo ? ' disabled' : '') +
+            ' aria-label="Rol de ' + esc(u.username) + '"' +
+            ' onchange="app.cambiarRol(' + u.id + ', this.value)">' +
+            '<option value="usuario"' + (u.rol === 'usuario' ? ' selected' : '') + '>Usuario</option>' +
+            '<option value="admin"'   + (u.rol === 'admin'   ? ' selected' : '') + '>Administrador</option>' +
+          '</select></td>' +
+          '<td>' + (u.vinculado
+            ? '<span class="badge text-bg-success">vinculado</span>'
+            : '<span class="badge text-bg-light text-muted border">sin vincular</span>') + '</td>' +
+          '<td class="text-end"><button class="btn btn-sm btn-outline-danger"' +
+            (soyYo ? ' disabled' : '') +
+            ' onclick="app.eliminarUsuario(' + u.id + ')"' +
+            ' aria-label="Eliminar ' + esc(u.username) + '"><i class="bi bi-trash"></i></button></td>' +
+        '</tr>';
+      }).join('');
+    } catch (ex) {
+      tbody.innerHTML = '';
+      _errorAdmin(ex.message || 'No se pudieron cargar los usuarios.');
+    }
+  }
+
+  async function crearUsuario() {
+    const correo = document.getElementById('admin-nuevo-correo').value.trim().toLowerCase();
+    const rol    = document.getElementById('admin-nuevo-rol').value;
+    const btn    = document.getElementById('admin-btn-crear');
+    if (!correo) { _errorAdmin('Escribe el correo del nuevo usuario.'); return; }
+    btn.disabled = true;
+    try {
+      const r = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: correo, rol }),
+      });
+      const datos = await r.json();
+      if (!r.ok) throw new Error(datos.error);
+      document.getElementById('admin-nuevo-correo').value = '';
+      document.getElementById('admin-nuevo-rol').value = 'usuario';
+      _toast('Usuario añadido.', 'success');
+      await _cargarUsuarios();
+    } catch (ex) {
+      _errorAdmin(ex.message || 'No se pudo añadir el usuario.');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function cambiarRol(id, rol) {
+    try {
+      const r = await fetch('/api/admin/users/' + id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rol }),
+      });
+      const datos = await r.json();
+      if (!r.ok) throw new Error(datos.error);
+      _toast('Rol actualizado.', 'success');
+    } catch (ex) {
+      _errorAdmin(ex.message || 'No se pudo cambiar el rol.');
+    }
+    // Se recarga siempre: si falló, el desplegable vuelve a su valor real
+    // en lugar de quedarse mostrando algo que no se ha guardado.
+    await _cargarUsuarios();
+  }
+
+  async function eliminarUsuario(id) {
+    const u = _usuariosCache.find(x => x.id === id);
+    if (!u) return;
+    if (!confirm('¿Eliminar a ' + u.username + '?\n\n'
+      + 'Pierde el acceso de inmediato, aunque tenga la sesión abierta.')) return;
+    try {
+      const r = await fetch('/api/admin/users/' + id, { method: 'DELETE' });
+      const datos = await r.json();
+      if (!r.ok) throw new Error(datos.error);
+      _toast('Usuario eliminado.', 'success');
+    } catch (ex) {
+      _errorAdmin(ex.message || 'No se pudo eliminar el usuario.');
+    }
+    await _cargarUsuarios();
+  }
+
   async function logout() {
-    await fetch('/api/logout', { method: 'POST' });
-    location.reload();
+    // Si la sesión vino de Authentik, el servidor devuelve la URL de cierre de
+    // sesión allí; si no, se recarga como siempre.
+    let destino = null;
+    try {
+      const r = await fetch('/api/logout', { method: 'POST' });
+      const data = await r.json().catch(() => ({}));
+      destino = data.redirect || null;
+    } catch { /* la sesión local ya está destruida; recargar igualmente */ }
+    if (destino) location.href = destino;
+    else location.reload();
   }
 
   // ── Init ──────────────────────────────────────────────────────
@@ -955,6 +1226,7 @@ const app = (() => {
     bsModalConfirmar = new bootstrap.Modal(document.getElementById('modal-confirmar'));
     bsModalImportar  = new bootstrap.Modal(document.getElementById('modal-importar'));
     bsModalQR        = new bootstrap.Modal(document.getElementById('modal-qr'));
+    bsModalAdmin     = new bootstrap.Modal(document.getElementById('modal-admin'));
     bsToast          = new bootstrap.Toast(document.getElementById('app-toast'));
   }
 
@@ -1824,6 +2096,7 @@ const app = (() => {
     abrirModalAlta, guardarEsim, confirmarCambioEstado, confirmarEliminar, limpiarFiltros,
     abrirModalImportar, analizarCSV, agregarManual, quitarManual, confirmarImportar,
     descargarQR, copiarLPA, prepararCorreo,
+    abrirAdmin, crearUsuario, cambiarRol, eliminarUsuario,
   };
 
 })();
