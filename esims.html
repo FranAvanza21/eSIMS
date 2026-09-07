@@ -181,57 +181,6 @@
       margin: auto; /* centra si cabe; no recorta si no cabe */
     }
 
-    /* ── Aviso de migración a Authentik ── */
-    /* No se comunica solo con el color: icono + encabezado + role="alert".
-       Contrastes sobre #fdecea: encabezado #b02a37 ≈ 6.2:1, texto #7a2430 ≈ 8.9:1,
-       los dos por encima del 4.5:1 de WCAG AA. */
-    .aviso-authentik {
-      background: #fdecea;
-      border: 1px solid #f0b3ae;
-      color: #7a2430;
-      padding: .9rem 1rem;
-      font-size: .85rem;
-      line-height: 1.5;
-      text-align: left;
-    }
-    .aviso-authentik .aviso-cab {
-      display: flex; align-items: center; gap: .4rem;
-      color: #b02a37; font-weight: 700; font-size: .82rem;
-      text-transform: uppercase; letter-spacing: .3px;
-      margin-bottom: .5rem;
-    }
-    .aviso-authentik p { margin: 0 0 .55rem; }
-    .aviso-authentik strong { color: #8c1f2b; }
-    .aviso-authentik .aviso-pregunta { font-weight: 600; }
-    .aviso-authentik .aviso-btn {
-      display: inline-block; width: 100%; text-align: center;
-      background: #fff; color: #b02a37;
-      border: 1px solid #e0a0a0; border-radius: 8px;
-      padding: .55rem 1rem; margin-top: .15rem;
-      font-weight: 600; font-size: .85rem; text-decoration: none;
-    }
-    .aviso-authentik .aviso-btn:hover,
-    .aviso-authentik .aviso-btn:focus {
-      background: #b02a37; color: #fff; border-color: #b02a37;
-    }
-    #aviso-login { border-radius: 8px; margin-bottom: 1rem; }
-    /* Barra dentro de la aplicación: mismo contenido, en horizontal. */
-    #aviso-barra {
-      position: sticky; top: 0; z-index: 1030;
-      border-width: 0 0 3px; border-bottom-color: #b02a37; border-radius: 0;
-      padding: .7rem 1rem;
-    }
-    #aviso-barra .aviso-interior {
-      display: flex; flex-wrap: wrap; align-items: center;
-      gap: .35rem 1.25rem; max-width: 1400px; margin: 0 auto;
-    }
-    #aviso-barra .aviso-cab { margin-bottom: 0; }
-    #aviso-barra p { margin-bottom: 0; }
-    #aviso-barra .aviso-pregunta { display: none; } /* redundante junto al botón */
-    #aviso-barra .aviso-btn { width: auto; margin: 0 0 0 auto; white-space: nowrap; }
-    @media (max-width: 575.98px) {
-      #aviso-barra .aviso-btn { width: 100%; margin-left: 0; }
-    }
     .login-logo {
       font-size: 1.1rem; font-weight: 700;
       color: var(--avanza-dark);
@@ -242,9 +191,6 @@
 </head>
 <body class="bg-light">
 
-<!-- ─── Aviso de migración (app ya logueada) ─── -->
-<div id="aviso-barra" class="aviso-authentik" role="alert" hidden></div>
-
 <!-- ─── Login ─── -->
 <div id="login-overlay">
   <div class="login-card">
@@ -253,36 +199,12 @@
     </div>
     <p class="text-muted mb-4" style="font-size:.82rem">Gestión de eSIMs — acceso restringido</p>
 
-    <!-- ─── Aviso de migración (pantalla de acceso) ─── -->
-    <div id="aviso-login" class="aviso-authentik" role="alert" hidden></div>
-
     <!-- ─── Acceso con Authentik ─── -->
-    <div id="oidc-bloque" hidden>
+    <div id="oidc-bloque">
       <a href="/auth/oidc/login" class="btn btn-avanza w-100">
         <i class="bi bi-shield-lock me-1"></i>Entrar con la cuenta de Avanza
       </a>
-      <div class="d-flex align-items-center gap-2 my-3 text-muted" style="font-size:.75rem">
-        <hr class="flex-grow-1 my-0"><span>o con tu usuario de siempre</span><hr class="flex-grow-1 my-0">
-      </div>
     </div>
-
-    <form id="login-form" novalidate autocomplete="on" onsubmit="return false">
-      <div class="mb-3">
-        <label class="form-label fw-500">Usuario</label>
-        <input type="text" class="form-control" id="login-user"
-               autocomplete="username" required autofocus>
-      </div>
-      <div class="mb-3">
-        <label class="form-label fw-500">Contraseña</label>
-        <input type="password" class="form-control" id="login-pass"
-               autocomplete="current-password" required>
-      </div>
-      <div class="alert alert-danger py-2 d-none" id="login-error" style="font-size:.85rem"></div>
-      <button type="button" class="btn btn-avanza w-100" id="login-btn"
-              onclick="app.handleLogin()">
-        <i class="bi bi-box-arrow-in-right me-1"></i>Entrar
-      </button>
-    </form>
   </div>
 </div>
 
@@ -1044,7 +966,6 @@ const app = (() => {
 
   // ── Auth ──────────────────────────────────────────────────────
   async function init() {
-    _cargarAviso(); // sin await: no debe retrasar la carga de la aplicación
     try {
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 5000);
@@ -1058,84 +979,6 @@ const app = (() => {
         return;
       }
     } catch { /* no autenticado o timeout */ }
-  }
-
-  // Aviso de migración a Authentik. Se pinta en los DOS sitios: en la pantalla
-  // de acceso y como barra fija dentro de la aplicación — la sesión dura 8 h, y
-  // quien la tiene viva no pasa por el login y no se enteraría.
-  async function _cargarAviso() {
-    let cfg;
-    try {
-      const r = await fetch('/api/aviso');
-      if (!r.ok) return;
-      cfg = await r.json();
-    } catch { return; }
-
-    if (cfg.oidcEnabled) document.getElementById('oidc-bloque').hidden = false;
-    if (!cfg.fecha) return; // sin AVISO_AUTHENTIK_FECHA no se pinta nada
-
-    // cfg.fecha es una frase completa ("a lo largo de esta semana",
-    // "el 1 de octubre"), no una fecha suelta: encaja detrás de
-    // "dejará de funcionar" tal cual venga de la variable de entorno.
-    const cabecera =
-      '<div class="aviso-cab">' +
-        '<i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>' +
-        'Cambio en la forma de entrar' +
-      '</div>';
-
-    const bloque = comoEntrar =>
-      '<div class="aviso-interior">' +
-        cabecera +
-        '<p>El acceso con usuario y contraseña <strong>dejará de funcionar ' +
-          esc(cfg.fecha) + '</strong>.</p>' +
-        '<p>' + comoEntrar + ', usando tu correo ' +
-          '<strong>@avanzasolutions.es</strong> o <strong>@avanzafibra.com</strong>.</p>' +
-        '<p class="aviso-pregunta">¿Todavía no tienes contraseña de Avanza?</p>' +
-        '<a class="aviso-btn" href="' + esc(cfg.recoveryUrl) + '" target="_blank" rel="noopener">' +
-          'Crear mi contraseña de Avanza</a>' +
-      '</div>';
-
-    const destinos = [
-      ['aviso-login', 'Pruébalo ya con el botón de abajo'],
-      ['aviso-barra', 'La próxima vez, entra con el botón «Entrar con la cuenta de Avanza»'],
-    ];
-    for (const [id, comoEntrar] of destinos) {
-      const el = document.getElementById(id);
-      if (!el) continue;
-      el.innerHTML = bloque(comoEntrar);
-      el.hidden = false;
-    }
-  }
-
-  async function handleLogin() {
-    const btn = document.getElementById('login-btn');
-    const err = document.getElementById('login-error');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Entrando…';
-    err.classList.add('d-none');
-    try {
-      const r = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: document.getElementById('login-user').value.trim(),
-          password: document.getElementById('login-pass').value,
-        }),
-      });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error);
-      // El rol no viene en la respuesta del login (no se ha tocado ese endpoint):
-      // se pide aparte, igual que hace init().
-      const me = await fetch('/api/me').then(x => x.ok ? x.json() : null).catch(() => null);
-      _yoId = me?.id ?? null;
-      document.getElementById('login-overlay').classList.add('d-none');
-      _mostrarApp(data.username, me?.rol);
-    } catch (ex) {
-      err.textContent = ex.message || 'Error al iniciar sesión.';
-      err.classList.remove('d-none');
-      btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-box-arrow-in-right me-1"></i>Entrar';
-    }
   }
 
   async function _mostrarApp(username, rol) {
@@ -2161,7 +2004,7 @@ const app = (() => {
   }
 
   return {
-    init, logout, handleLogin,
+    init, logout,
     abrirModalAlta, guardarEsim, confirmarCambioEstado, confirmarEliminar, limpiarFiltros,
     abrirModalImportar, analizarCSV, agregarManual, quitarManual, confirmarImportar,
     descargarQR, copiarLPA, prepararCorreo,

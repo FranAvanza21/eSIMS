@@ -61,20 +61,7 @@ async function initDB() {
   `);
 }
 
-async function bootstrapAdmin() {
-  if (!process.env.ADMIN_USER || !process.env.ADMIN_PASSWORD) return;
-  const { rowCount } = await pool.query('SELECT 1 FROM users LIMIT 1');
-  if (rowCount > 0) return;
-  const hash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
-  await pool.query(
-    'INSERT INTO users (username, password_hash) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-    [process.env.ADMIN_USER, hash]
-  );
-  console.log(`Usuario admin "${process.env.ADMIN_USER}" creado.`);
-}
-
 initDB()
-  .then(bootstrapAdmin)
   .catch(err => console.error('DB init error:', err));
 
 // ── OIDC / Authentik ──────────────────────────────────────────────
@@ -116,12 +103,13 @@ async function initOIDC() {
   }
 }
 
-// Un fallo aquí NO puede tumbar la aplicación: si Authentik está caído o mal
-// configurado, el login local tiene que seguir funcionando.
+// Un fallo aquí NO puede tumbar la aplicación: Authentik es la única vía de
+// acceso, así que si el discovery falla, /auth/oidc/login lo reintentará en
+// la siguiente petición en vez de dejar el proceso caído.
 initOIDC().catch(err => {
   oidcConfig = null;
   console.error('OIDC desactivado — el discovery falló:', err.message);
-  console.error('El login local sigue operativo.');
+  console.error('Nadie podrá iniciar sesión hasta que Authentik esté disponible de nuevo.');
 });
 
 // Cache en memoria para QRs pendientes de entregar por correo
@@ -199,23 +187,6 @@ app.get('/api/me', async (req, res) => {
   }
 });
 
-app.post('/api/login', async (req, res) => {
-  const { username, password } = req.body ?? {};
-  if (!username || !password) return res.status(400).json({ error: 'Credenciales requeridas.' });
-  try {
-    const { rows } = await pool.query('SELECT * FROM users WHERE username=$1', [username]);
-    const user = rows[0];
-    if (!user || !await bcrypt.compare(password, user.password_hash)) {
-      return res.status(401).json({ error: 'Usuario o contraseña incorrectos.' });
-    }
-    req.session.userId   = user.id;
-    req.session.username = user.username;
-    res.json({ ok: true, username: user.username });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 app.post('/api/logout', (req, res) => {
   // Si la sesión vino de Authentik, además hay que cerrar allí. El frontend
   // navega a la URL devuelta; si no la hay, se comporta como siempre.
@@ -236,19 +207,9 @@ app.post('/api/logout', (req, res) => {
   });
 });
 
-// Aviso de migración. Público: lo consume el HTML antes de autenticarse.
-app.get('/api/aviso', (req, res) => {
-  res.json({
-    fecha:       process.env.AVISO_AUTHENTIK_FECHA || null,
-    recoveryUrl: process.env.AVISO_AUTHENTIK_RECOVERY_URL
-                 || 'https://auth.avanzafibra.net/if/flow/password-recovery/',
-    oidcEnabled: Boolean(oidcConfig),
-  });
-});
-
-// Proteger todas las rutas /api/* excepto login, me y aviso
+// Proteger todas las rutas /api/* excepto me
 app.use('/api', (req, res, next) => {
-  const publica = ['/login', '/me', '/aviso'];
+  const publica = ['/me'];
   if (publica.includes(req.path)) return next();
   if (!req.session?.userId) return res.status(401).json({ error: 'No autenticado' });
   next();
@@ -297,7 +258,7 @@ if (OIDC_CONFIGURADO) {
   app.get('/auth/oidc/login', async (req, res) => {
     if (!oidcConfig) {
       return paginaError(res, 503, 'Acceso con Authentik no disponible',
-        'No se ha podido contactar con el proveedor de identidad. Puedes entrar con usuario y contraseña.');
+        'No se ha podido contactar con el proveedor de identidad. Vuelve a intentarlo en unos minutos.');
     }
     try {
       const codeVerifier  = oidc.randomPKCECodeVerifier();
