@@ -35,6 +35,7 @@ async function initDB() {
       email       TEXT,
       fecha_usado DATE
     );
+    ALTER TABLE esims ADD COLUMN IF NOT EXISTS telefono TEXT;
     CREATE TABLE IF NOT EXISTS email_logs (
       id         SERIAL PRIMARY KEY,
       iccid      TEXT NOT NULL,
@@ -468,12 +469,12 @@ app.post('/api/esims/bulk', async (req, res) => {
 });
 
 app.post('/api/esims', async (req, res) => {
-  const { id, iccid, estado, servidor, clave, pin, puk, id_cliente, email, fecha_usado } = req.body;
+  const { id, iccid, estado, servidor, clave, pin, puk, id_cliente, email, telefono, fecha_usado } = req.body;
   try {
     const { rows } = await pool.query(
-      `INSERT INTO esims (id, iccid, estado, servidor, clave, pin, puk, id_cliente, email, fecha_usado)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
-      [id, iccid, estado ?? 'free', servidor, clave, pin, puk, id_cliente ?? null, email ?? null, fecha_usado ?? null]
+      `INSERT INTO esims (id, iccid, estado, servidor, clave, pin, puk, id_cliente, email, telefono, fecha_usado)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
+      [id, iccid, estado ?? 'free', servidor, clave, pin, puk, id_cliente ?? null, email ?? null, telefono ?? null, fecha_usado ?? null]
     );
     res.status(201).json(rows[0]);
   } catch (err) {
@@ -482,13 +483,13 @@ app.post('/api/esims', async (req, res) => {
 });
 
 app.put('/api/esims/:id', async (req, res) => {
-  const { iccid, estado, servidor, clave, pin, puk, id_cliente, email, fecha_usado } = req.body;
+  const { iccid, estado, servidor, clave, pin, puk, id_cliente, email, telefono, fecha_usado } = req.body;
   try {
     const { rows } = await pool.query(
       `UPDATE esims SET iccid=$1, estado=$2, servidor=$3, clave=$4, pin=$5,
-       puk=$6, id_cliente=$7, email=$8, fecha_usado=$9
-       WHERE id=$10 RETURNING *`,
-      [iccid, estado, servidor, clave, pin, puk, id_cliente ?? null, email ?? null, fecha_usado ?? null, req.params.id]
+       puk=$6, id_cliente=$7, email=$8, telefono=$9, fecha_usado=$10
+       WHERE id=$11 RETURNING *`,
+      [iccid, estado, servidor, clave, pin, puk, id_cliente ?? null, email ?? null, telefono ?? null, fecha_usado ?? null, req.params.id]
     );
     if (!rows.length) return res.status(404).json({ error: 'eSIM no encontrada' });
     res.json(rows[0]);
@@ -645,7 +646,7 @@ app.delete('/api/admin/users/:id', exigirAdmin, async (req, res) => {
 // ── Envío de correo ───────────────────────────────────────────────
 
 app.post('/api/send-email', async (req, res) => {
-  const { to, iccid, nombre, qrBase64, pin, puk } = req.body ?? {};
+  const { to, iccid, nombre, qrBase64, pin, puk, telefono } = req.body ?? {};
 
   if (!to || !iccid || !qrBase64) {
     return res.status(400).json({ error: 'Faltan campos: to, iccid, qrBase64.' });
@@ -664,6 +665,7 @@ app.post('/api/send-email', async (req, res) => {
     htmlBody = tpl
       .replace(/\{\{NOMBRE\}\}/g,   nombre || 'Cliente')
       .replace(/\{\{ICCID\}\}/g,    iccid)
+      .replace(/\{\{TELEFONO\}\}/g, telefono || '—')
       .replace(/\{\{PIN\}\}/g,      pin  || '—')
       .replace(/\{\{PUK\}\}/g,      puk  || '—')
       .replace(/\{\{QR_IMAGE\}\}/g, qrImg);

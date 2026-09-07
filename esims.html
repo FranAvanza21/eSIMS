@@ -400,6 +400,7 @@
           <thead>
             <tr>
               <th>ICCID</th>
+              <th>Teléfono</th>
               <th>Cliente</th>
               <th>Email</th>
               <th>Estado</th>
@@ -488,6 +489,13 @@
             <div class="col-12">
               <hr class="my-0">
               <p class="form-section-label mt-2 mb-0">Datos del cliente</p>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-500">Teléfono <span class="text-danger">*</span></label>
+              <input type="tel" class="form-control" id="f-telefono"
+                     placeholder="9 dígitos" maxlength="9">
+              <div class="field-error d-none" id="err-telefono"></div>
             </div>
 
             <div class="col-12 col-md-6">
@@ -1001,7 +1009,7 @@ function formatIccid(iccid) {
 
 function formatFecha(fecha) {
   if (!fecha) return '—';
-  const [y, m, d] = fecha.split('-');
+  const [y, m, d] = fecha.slice(0, 10).split('-');
   return `${d}/${m}/${y}`;
 }
 
@@ -1326,6 +1334,7 @@ const app = (() => {
       if (q) {
         const texto = normalizar([
           e.iccid,
+          e.telefono,
           e.id_cliente,
           e.email,
           e.servidor,
@@ -1372,9 +1381,14 @@ const app = (() => {
       ? `<small class="text-muted">${esc(e.email)}</small>`
       : `<span class="text-muted">—</span>`;
 
+    const telefonoHtml = e.telefono
+      ? `<span class="font-monospace">${esc(e.telefono)}</span>`
+      : `<span class="text-muted">—</span>`;
+
     return `
       <tr>
         <td><code class="iccid-code">${esc(formatIccid(e.iccid))}</code></td>
+        <td>${telefonoHtml}</td>
         <td>${clienteHtml}</td>
         <td>${emailHtml}</td>
         <td><span class="badge ${esc(estado.clase)}">${esc(estado.label)}</span></td>
@@ -1521,13 +1535,14 @@ const app = (() => {
     document.getElementById('f-clave').value        = esim.clave ?? '';
     document.getElementById('f-pin').value          = esim.pin ?? '';
     document.getElementById('f-puk').value          = esim.puk ?? '';
+    document.getElementById('f-telefono').value     = esim.telefono ?? '';
     document.getElementById('f-id-cliente').value   = esim.id_cliente ?? '';
     document.getElementById('f-email').value        = esim.email ?? '';
     document.getElementById('f-fecha-usado').value  = esim.fecha_usado ?? '';
   }
 
   function _limpiarFormulario() {
-    ['f-iccid','f-servidor','f-clave','f-pin','f-puk','f-id-cliente','f-email','f-fecha-usado']
+    ['f-iccid','f-servidor','f-clave','f-pin','f-puk','f-telefono','f-id-cliente','f-email','f-fecha-usado']
       .forEach(id => { document.getElementById(id).value = ''; });
     _limpiarErrores();
   }
@@ -1553,6 +1568,7 @@ const app = (() => {
       clave:       document.getElementById('f-clave').value.trim(),
       pin:         document.getElementById('f-pin').value.trim(),
       puk:         document.getElementById('f-puk').value.trim(),
+      telefono:    document.getElementById('f-telefono').value.trim(),
       id_cliente:  document.getElementById('f-id-cliente').value
                      ? Number(document.getElementById('f-id-cliente').value) : null,
       email:       document.getElementById('f-email').value.trim() || null,
@@ -1616,6 +1632,12 @@ const app = (() => {
         _mostrarErrorCampo('f-puk', 'err-puk', 'Debe tener 8 dígitos.');
         valido = false;
       }
+    }
+
+    const telefono = document.getElementById('f-telefono').value.trim();
+    if (!/^\d{9}$/.test(telefono)) {
+      _mostrarErrorCampo('f-telefono', 'err-telefono', 'El teléfono debe tener 9 dígitos.');
+      valido = false;
     }
 
     const idCliente = document.getElementById('f-id-cliente').value;
@@ -2111,7 +2133,7 @@ const app = (() => {
       const resp = await fetch('/api/send-email', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ to: e.email, iccid: formatIccid(e.iccid), nombre, qrBase64, pin: e.pin, puk: e.puk }),
+        body:    JSON.stringify({ to: e.email, iccid: formatIccid(e.iccid), nombre, qrBase64, pin: e.pin, puk: e.puk, telefono: e.telefono }),
       });
       const json = await resp.json();
       if (!resp.ok) throw new Error(json.error ?? 'Error desconocido');
